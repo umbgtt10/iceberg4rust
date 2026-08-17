@@ -70,7 +70,7 @@ cargo iceberg4rust [OPTIONS]
 | `--manifest-path <PATH>` | Manifest to analyse. Defaults to the working directory. |
 | `--package <NAME>` | Package to analyse; repeatable. Required for a workspace of several members. |
 | `--threshold <N>` | Files scoring at or above `N` are reported as offenders. Default `20`. |
-| `--top <N>` | Show at most `N` offenders in the table. Display only — never affects the verdict. Default `20`. |
+| `--top <N>` | Show at most `N` offenders in the table, keeping the `N` riskiest across every scanned package. Display only — never affects the verdict. Default `20`. |
 | `--json` | Emit the report as JSON. |
 | `-h`, `--help` | Print help |
 | `-V`, `--version` | Print version |

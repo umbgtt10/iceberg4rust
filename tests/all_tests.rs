@@ -18,6 +18,7 @@ mod private_function_collector_tests;
 mod private_function_metrics_tests;
 mod private_helper_classifier_tests;
 mod report_printer_tests;
+mod risk_ordering_tests;
 mod runner_tests;
 mod source_file_walker_tests;
 mod source_root_collector_tests;

@@ -43,9 +43,12 @@ This document describes the feature set currently shipped by
 - `--json` carrying `threshold`, `scored_files`, `visible_files`, `total_risk`
   and `files[]`, each with `functions[]`, `data_structs[]` and
   `behavioral_structs[]`
-- JSON ordering is stated by the contract, descending by risk with ties broken on
-  file name, and applies no `--top` limit
-- `--top` limits table rows only and never affects the verdict
+- Ranking is global across every scanned package, descending by risk with ties
+  broken on file name, so `--package` order never changes what is shown
+- JSON ordering is stated by the contract, on the same rule, and applies no
+  `--top` limit
+- `--top` limits table rows only and never affects the verdict; it keeps the
+  riskiest rows, because ranking is applied before the limit
 
 ### Gate contract
 

@@ -19,6 +19,7 @@ pub mod private_function_metrics;
 pub mod private_function_report;
 pub mod private_helper_classifier;
 pub mod report_printer;
+pub mod risk_ordering;
 pub mod runner;
 pub mod source_file_walker;
 pub mod source_root_collector;

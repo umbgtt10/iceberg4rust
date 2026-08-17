@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-17
+
+### Fixed
+
+- The console table and the per-offender detail now rank files across every
+  scanned package instead of within each package. `Runner` appends one package's
+  reports after another, and `ReportPrinter::select_visible` filtered and applied
+  `--top` without ranking first, so the table showed the first N offenders in
+  `--package` order rather than the N riskiest.
+
+  On a multi-package workspace this could hide the highest-risk file in the scan
+  entirely. Found against a five-package tree where `--top 18`, with the largest
+  package listed first, returned eighteen rows from that one package and omitted
+  the riskiest file in the repository — which sat in a package named later on the
+  command line. Reordering the `--package` flags changed which files appeared.
+
+  `--json` was never affected: it states its own ordering and applies no `--top`.
+  Neither was the exit code, which is computed from the threshold across all
+  reports and never from the table selection.
+
+### Changed
+
+- `--top` now cuts the lowest-scoring rows rather than whichever package came
+  last. Output for single-package scans is unchanged.
+
+### Added
+
+- `RiskOrdering` (`risk_ordering.rs`), the single comparator the table, the JSON
+  surface and the per-package sort now share. The rule had been written out three
+  times; the copy the table needed was the one that did not exist.
+
 ## [0.1.0] - 2026-08-17
 
 First standalone release. The tool previously lived inside a private workspace as

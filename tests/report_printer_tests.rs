@@ -230,3 +230,94 @@ fn has_offenders_ignores_the_top_limit() {
     // Assert
     assert!(offenders);
 }
+
+fn report_in(package: &str, file: &str, risk: f64) -> FileRiskReport {
+    FileRiskReport {
+        functions: Vec::new(),
+        data_structs: Vec::new(),
+        behavioral_structs: Vec::new(),
+        package_name: package.to_string(),
+        relative_file: file.to_string(),
+        effective_loc: 100,
+        private_function_count: 5,
+        private_complexity_sum: 7,
+        data_private_struct_count: 1,
+        behavioral_private_struct_count: 2,
+        risk_score: risk,
+    }
+}
+
+// The runner appends one package's reports after another, so a slice arriving
+// here is ordered only within each package. The table has to rank globally or
+// it reads as a ranking it is not.
+#[test]
+fn select_visible_orders_reports_from_every_package_by_risk_descending() {
+    // Arrange
+    let printer = ReportPrinter::new(0.0, 10);
+    let reports = vec![
+        report_in("execution-types", "src/state_root.rs", 2.50),
+        report_in("evm", "src/slot_analyzer.rs", 27.60),
+        report_in("node", "src/validation.rs", 26.89),
+    ];
+
+    // Act
+    let visible = printer.select_visible(&reports);
+
+    // Assert
+    let order: Vec<&str> = visible
+        .iter()
+        .map(|report| report.relative_file.as_str())
+        .collect();
+    assert_eq!(
+        order,
+        vec![
+            "src/slot_analyzer.rs",
+            "src/validation.rs",
+            "src/state_root.rs"
+        ]
+    );
+}
+
+// `--top` has to cut the lowest-risk rows, not the rows of whichever package
+// happened to be passed last. Scanning a workspace with a low-risk package
+// listed first used to hide the highest-risk file in the whole repository.
+#[test]
+fn select_visible_applies_top_to_the_highest_risk_files_across_packages() {
+    // Arrange
+    let printer = ReportPrinter::new(0.0, 2);
+    let reports = vec![
+        report_in("execution-types", "src/state_root.rs", 2.50),
+        report_in("execution-types", "src/block.rs", 2.13),
+        report_in("evm", "src/slot_analyzer.rs", 27.60),
+    ];
+
+    // Act
+    let visible = printer.select_visible(&reports);
+
+    // Assert
+    let order: Vec<&str> = visible
+        .iter()
+        .map(|report| report.relative_file.as_str())
+        .collect();
+    assert_eq!(order, vec!["src/slot_analyzer.rs", "src/state_root.rs"]);
+}
+
+#[test]
+fn select_visible_breaks_equal_risk_ties_by_file_path() {
+    // Arrange
+    let printer = ReportPrinter::new(0.0, 10);
+    let reports = vec![
+        report_in("node", "src/z.rs", 9.0),
+        report_in("evm", "src/a.rs", 9.0),
+    ];
+
+    // Act
+    let visible = printer.select_visible(&reports);
+
+    // Assert
+    let order: Vec<&str> = visible
+        .iter()
+        .map(|report| report.relative_file.as_str())
+        .collect();
+    assert_eq!(order, vec!["src/a.rs", "src/z.rs"]);
+}

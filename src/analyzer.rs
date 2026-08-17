@@ -2,7 +2,6 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::Path;
@@ -19,6 +18,7 @@ use crate::package_context::PackageContext;
 use crate::private_function_collector::PrivateFunctionCollector;
 use crate::private_function_report::PrivateFunctionReport;
 use crate::private_helper_classifier::PrivateHelperClassifier;
+use crate::risk_ordering::RiskOrdering;
 use crate::source_file_walker::SourceFileWalker;
 
 #[derive(Default)]
@@ -34,7 +34,7 @@ impl Analyzer {
         for source_root in &package.source_roots {
             reports.extend(self.analyze_source_root(source_root, package)?);
         }
-        reports.sort_by(risk_descending);
+        reports.sort_by(RiskOrdering::descending);
         Ok(reports)
     }
 
@@ -185,14 +185,6 @@ impl Analyzer {
                 + Self::DATA_STRUCT_WEIGHT * (data_private_struct_count as f64)
                 + Self::BEHAVIORAL_STRUCT_WEIGHT * (behavioral_private_struct_count as f64))
     }
-}
-
-fn risk_descending(left: &FileRiskReport, right: &FileRiskReport) -> Ordering {
-    right
-        .risk_score
-        .partial_cmp(&left.risk_score)
-        .unwrap_or(Ordering::Equal)
-        .then_with(|| left.relative_file.cmp(&right.relative_file))
 }
 
 fn first_struct_name(syntax: &File) -> Option<String> {

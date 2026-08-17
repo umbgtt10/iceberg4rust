@@ -68,7 +68,10 @@ Three renderers, each returning or printing one thing:
 
 - `ReportPrinter` (`report_printer.rs`) — the summary table, the trailing
   summary line, and `has_offenders`, which decides the exit code from the same
-  selection the table shows so the two can never disagree.
+  selection the table shows so the two can never disagree. `select_visible`
+  ranks before it truncates, because `Runner` appends one package's reports
+  after another and taking `--top` off that order would cut by package rather
+  than by score.
 - `OffenderDetailRenderer` (`offender_detail_renderer.rs`) — per-offender
   function detail. Returns a `String`, so it is testable without capturing
   stdout.
@@ -77,6 +80,9 @@ Three renderers, each returning or printing one thing:
   limit, because a consumer wants every offender.
 
 `FileRiskReport` (`file_risk_report.rs`) is the shape both surfaces project.
+`RiskOrdering` (`risk_ordering.rs`) is the single comparator all three ranking
+sites share — descending score, ties broken on file name, total even when a
+score will not compare.
 
 ## CLI layer
 

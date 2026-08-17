@@ -99,6 +99,10 @@ effective LOC, private function count, complexity sum, data-only and behavioural
 struct counts, and the risk score — sorted by descending risk, ties broken on
 file name.
 
+The ranking is global. Scanning several packages in one run ranks every file
+against every other, not each package against itself, so the first row is the
+riskiest file in the scan and `--package` order never changes what is shown.
+
 Beneath it, per-offender detail names every private function in that file with
 its line and its individual complexity, ordered by descending complexity, because
 that is where an extraction usually starts. A method that does not count toward
@@ -123,7 +127,8 @@ file scoring zero is dropped before it becomes a report.
 - only files with `FileRisk >= threshold` are reported
 - `--threshold 0` shows every file that scored above zero
 - `--top` limits how many rows the table prints. It is display only and never
-  affects which files are offenders or what the process exits with
+  affects which files are offenders or what the process exits with. It cuts the
+  lowest-scoring rows, because the ranking is applied before the limit
 
 The threshold is an agreed bound, not a discovered boundary. Nothing here claims
 a file above it is badly designed — only that it exceeds what was agreed.

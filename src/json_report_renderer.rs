@@ -2,13 +2,12 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::cmp::Ordering;
-
 use anyhow::{Context, Result};
 use serde::Serialize;
 
 use crate::file_risk_report::FileRiskReport;
 use crate::report_printer::ReportPrinter;
+use crate::risk_ordering::RiskOrdering;
 
 #[derive(Serialize)]
 struct JsonReport<'a> {
@@ -36,14 +35,8 @@ impl JsonReportRenderer {
         let mut files = printer.select_visible(reports);
         // Ordering is stated by this contract rather than inherited from the
         // caller, so a consumer can rely on it without knowing who built the
-        // slice. Ties break on file name to keep runs reproducible.
-        files.sort_by(|left, right| {
-            right
-                .risk_score
-                .partial_cmp(&left.risk_score)
-                .unwrap_or(Ordering::Equal)
-                .then_with(|| left.relative_file.cmp(&right.relative_file))
-        });
+        // slice or how the printer happens to order today.
+        files.sort_by(|left, right| RiskOrdering::descending(left, right));
 
         let report = JsonReport {
             threshold: self.threshold,

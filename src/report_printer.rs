@@ -4,6 +4,7 @@
 
 use crate::file_risk_report::FileRiskReport;
 use crate::offender_detail_renderer::OffenderDetailRenderer;
+use crate::risk_ordering::RiskOrdering;
 
 pub struct ReportPrinter {
     threshold: f64,
@@ -103,11 +104,18 @@ impl ReportPrinter {
             .any(|report| report.risk_score >= self.threshold)
     }
 
+    // Ranking happens here rather than upstream because this is where `top`
+    // truncates. The runner appends one package's reports after another, so the
+    // incoming slice is ordered only within each package; taking `top` off that
+    // would cut whichever package came last instead of the lowest scores, and
+    // could omit the highest-risk file in the workspace entirely.
     pub fn select_visible<'a>(&self, reports: &'a [FileRiskReport]) -> Vec<&'a FileRiskReport> {
-        reports
+        let mut visible: Vec<&FileRiskReport> = reports
             .iter()
             .filter(|report| report.risk_score >= self.threshold)
-            .take(self.top)
-            .collect()
+            .collect();
+        visible.sort_by(|left, right| RiskOrdering::descending(left, right));
+        visible.truncate(self.top);
+        visible
     }
 }
