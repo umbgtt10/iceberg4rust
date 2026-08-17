@@ -61,3 +61,23 @@ selection. Two runs over different package sets cannot be compared, and the numb
 is useful only as a before-and-after within one selection.
 
 No action planned; the per-file scores are the intended unit.
+
+## A `pub` item inside a private inline module is treated as reachable
+
+`is_private_item` reads an item's own visibility. `process_mod` recurses into an
+inline `mod` without tracking whether that module is itself reachable, so a `pub`
+function inside a private `mod` is excluded from `P` even though nothing outside
+can call it.
+
+This is the same defect class as the restricted-visibility gap fixed in 0.2.0 —
+an item that looks reachable syntactically but is not — and the same test
+applies: can something outside the crate get at it?
+
+Left in place deliberately. Correcting it means threading module reachability
+through the recursion, including a public module nested inside a private one,
+and shipping it alongside the visibility change would have made the repricing of
+existing codebases impossible to attribute to either cause. The observed impact
+is small where `pub mod` is confined to `mod.rs` and `lib.rs`, which is the
+convention in the trees this was measured against.
+
+The effect is under-reporting, the wrong direction for a gate.

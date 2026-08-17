@@ -11,9 +11,12 @@ This document describes the feature set currently shipped by
 
 - File-level risk score:
   `FileRisk = (log2(1 + L) / 10) * (P + 0.5·sum(C_i) + 0.5·D + 2.0·B)`
-- `P` counts free functions and **inherent** impl methods with inherited
-  visibility; trait-impl methods are excluded, because a trait method is
-  reachable by anyone holding the trait
+- `P` counts free functions and **inherent** impl methods that are not `pub`;
+  trait-impl methods are excluded, because a trait method is reachable by anyone
+  holding the trait
+- Restricted visibility counts as hidden: `pub(crate)`, `pub(super)`,
+  `pub(in path)` and `pub(self)` are unreachable from outside the crate, so only
+  `pub` leaves `P`
 - Trait-impl complexity still counts toward `sum(C_i)`, and the private structs
   such methods use still count toward `D` and `B`
 - Helper structs are classified as data-only or behavioural, weighted `0.5` and

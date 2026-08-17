@@ -6,6 +6,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-17
+
+Scores rise. A gate that passes on 0.1.1 may fail on 0.2.0 without the code
+having changed, so treat this as a threshold review rather than a drop-in
+upgrade. No API changed; the scoring did.
+
+### Fixed
+
+- Restricted visibility now counts toward `P` and `sum(C_i)`. `is_private_item`
+  matched only `Visibility::Inherited`, so `pub(crate)`, `pub(super)`,
+  `pub(in path)` and `pub(self)` were treated exactly like `pub` and contributed
+  nothing at all.
+
+  Nothing outside a crate can reach a restricted function, including an
+  integration test, which is a separate crate. Prefixing every private function
+  in a file with `pub(crate)` therefore took its score to zero — no relocation,
+  no tests, no design change. That is the escape hatch `FORMULA.md` warns about
+  under "What is not remediation", except the tool could not see it.
+
+  Found on a consensus codebase: a validator extracted into its own file with
+  eleven `pub(super)` methods scored zero and did not appear in the report at
+  all, while the file it came from fell 26.89 to 9.00. Nineteen complexity left
+  the metric without becoming reachable by anything.
+
+  `ADR-HiddenMeansUnreachable` already stated the governing test — can something
+  outside get at it? — and excludes trait-impl methods on exactly that basis.
+  Reading only `Visibility::Inherited` got trait impls right by accident and
+  restricted visibility wrong by the same accident.
+
+### Changed
+
+- The effect is monotonic: no file scores lower than it did on 0.1.1. A codebase
+  with no restricted visibility is unaffected, so the four `*4rust` tools and
+  iceberg4rust itself score identically.
+
+### Notes
+
+- A `pub` item inside a private inline `mod` is still treated as reachable. Same
+  defect class, deliberately not bundled so that this release's repricing can be
+  attributed to one cause. Recorded in `docs/OPEN_POINTS.md`.
+
 ## [0.1.1] - 2026-08-17
 
 ### Fixed

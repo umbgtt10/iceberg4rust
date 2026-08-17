@@ -370,3 +370,144 @@ fn second() {}
     assert_eq!(functions[0].line, 2);
     assert_eq!(functions[1].line, 4);
 }
+
+// Restricted visibility is not reachable from another crate, and this project's
+// tests are their own crate, so a `pub(crate)` function is hidden implementation
+// exactly as a bare `fn` is. Only `pub` is genuinely reachable.
+#[test]
+fn collect_pub_crate_free_function_is_included() {
+    // Arrange
+    let items = parse_items("pub(crate) fn helper() -> u32 { 42 }");
+    let helper_structs = BTreeMap::new();
+
+    // Act
+    let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+}
+
+#[test]
+fn collect_pub_crate_free_function_carries_its_complexity() {
+    // Arrange
+    let items = parse_items("pub(crate) fn helper(v: u32) -> u32 { if v > 1 { 2 } else { 3 } }");
+    let helper_structs = BTreeMap::new();
+
+    // Act
+    let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
+
+    // Assert
+    assert_eq!(functions[0].complexity, 1);
+}
+
+#[test]
+fn collect_pub_super_function_inside_a_module_is_included() {
+    // Arrange
+    let items = parse_items(
+        r#"
+mod inner {
+    pub(super) fn helper() -> u32 { 42 }
+}
+"#,
+    );
+    let helper_structs = BTreeMap::new();
+
+    // Act
+    let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+}
+
+#[test]
+fn collect_pub_in_path_free_function_is_included() {
+    // Arrange
+    let items = parse_items("pub(in crate::inner) fn helper() -> u32 { 42 }");
+    let helper_structs = BTreeMap::new();
+
+    // Act
+    let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+}
+
+#[test]
+fn collect_pub_self_free_function_is_included() {
+    // Arrange
+    let items = parse_items("pub(self) fn helper() -> u32 { 42 }");
+    let helper_structs = BTreeMap::new();
+
+    // Act
+    let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+}
+
+#[test]
+fn collect_pub_crate_impl_method_is_included() {
+    // Arrange
+    let items = parse_items(
+        r#"
+pub struct Worker;
+
+impl Worker {
+    pub(crate) fn assist() -> u32 { 42 }
+}
+"#,
+    );
+    let helper_structs = BTreeMap::new();
+
+    // Act
+    let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+}
+
+// An inherent impl is the file's own implementation, so a restricted method on
+// it is hidden and counts toward the private surface, not merely its complexity.
+#[test]
+fn collect_pub_crate_impl_method_is_hidden() {
+    // Arrange
+    let items = parse_items(
+        r#"
+pub struct Worker;
+
+impl Worker {
+    pub(crate) fn assist() -> u32 { 42 }
+}
+"#,
+    );
+    let helper_structs = BTreeMap::new();
+
+    // Act
+    let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
+
+    // Assert
+    assert!(functions[0].is_hidden);
+}
+
+// Every restricted form counts; only bare `pub` escapes.
+#[test]
+fn collect_counts_every_restricted_form_and_excludes_only_pub() {
+    // Arrange
+    let items = parse_items(
+        r#"
+fn plain() -> u32 { 1 }
+pub(crate) fn crate_wide() -> u32 { 2 }
+pub(self) fn only_here() -> u32 { 3 }
+pub(in crate::inner) fn scoped() -> u32 { 4 }
+pub fn open() -> u32 { 5 }
+"#,
+    );
+    let helper_structs = BTreeMap::new();
+
+    // Act
+    let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
+
+    // Assert
+    let names: Vec<&str> = functions.iter().map(|f| f.name.as_str()).collect();
+    assert_eq!(names, vec!["plain", "crate_wide", "only_here", "scoped"]);
+}

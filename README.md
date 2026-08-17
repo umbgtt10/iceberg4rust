@@ -33,6 +33,10 @@ FileRisk = (log2(1 + L) / 10) × (P + 0.5·ΣCᵢ + 0.5·D + 2.0·B)
 `L` effective lines, `P` private functions, `Cᵢ` their cognitive complexity,
 `D` and `B` the private data-only and behavioural helper structs they use.
 
+Only `pub` keeps a function out of `P`. `pub(crate)`, `pub(super)` and the other
+restricted forms count as hidden, because nothing outside the crate — including
+an integration test, which is a separate crate — can reach them.
+
 Trait-implementation methods do **not** count toward `P` — they are reachable by
 anyone holding the trait, so they are contract rather than hidden machinery. Their
 complexity still counts. Full derivation, every term and every weight:

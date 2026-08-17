@@ -321,3 +321,69 @@ impl Primary {
         metrics.data_structs.len()
     );
 }
+
+// A type whose whole implementation is pub(crate) is untestable from outside the
+// crate, so it carries the same risk as one built from bare `fn` helpers.
+#[test]
+fn analyze_source_a_type_built_from_pub_crate_helpers_scores_risk() {
+    // Arrange
+    let source = r#"
+pub struct Worker;
+
+impl Worker {
+    pub fn run(&self, v: u32) -> u32 {
+        Self::step_one(v) + Self::step_two(v)
+    }
+
+    pub(crate) fn step_one(v: u32) -> u32 {
+        if v > 1 { 2 } else { 3 }
+    }
+
+    pub(crate) fn step_two(v: u32) -> u32 {
+        if v > 2 { 4 } else { 5 }
+    }
+}
+"#;
+
+    // Act
+    let metrics = Analyzer::new().analyze_source(source).expect("metrics");
+
+    // Assert
+    assert_eq!(metrics.private_function_count, 2);
+    assert_eq!(metrics.private_complexity_sum, 2);
+    assert!(metrics.risk_score > 0.0);
+}
+
+// Restricting a private helper must not change the score: pub(crate) is not an
+// escape hatch from the measurement, which is the whole point of counting it.
+#[test]
+fn analyze_source_scores_pub_crate_helpers_the_same_as_private_ones() {
+    // Arrange
+    let private_source = r#"
+pub struct Worker;
+
+impl Worker {
+    pub fn run(&self, v: u32) -> u32 { Self::step(v) }
+
+    fn step(v: u32) -> u32 {
+        if v > 1 { 2 } else { 3 }
+    }
+}
+"#;
+    let restricted_source = private_source.replace("    fn step", "    pub(crate) fn step");
+
+    // Act
+    let private = Analyzer::new()
+        .analyze_source(private_source)
+        .expect("metrics");
+    let restricted = Analyzer::new()
+        .analyze_source(&restricted_source)
+        .expect("metrics");
+
+    // Assert
+    assert_eq!(
+        private.private_function_count,
+        restricted.private_function_count
+    );
+    assert!((private.risk_score - restricted.risk_score).abs() < f64::EPSILON);
+}

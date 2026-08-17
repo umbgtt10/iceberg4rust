@@ -48,8 +48,15 @@ the score.
 
 `P` counts:
 
-- free functions with inherited visibility
-- **inherent** impl methods with inherited visibility
+- free functions that are not `pub`
+- **inherent** impl methods that are not `pub`
+
+Only `pub` escapes. Every restricted form — `pub(crate)`, `pub(super)`,
+`pub(in path)`, `pub(self)` — is unreachable from outside the crate, so it is
+hidden implementation exactly as a bare `fn` is. A restricted function cannot be
+called by another crate and cannot be exercised by an integration test, which is
+a separate crate; nothing outside changes if its body is rewritten. Restricting
+visibility is therefore not a way out of the measurement.
 
 It excludes methods of a trait implementation. Such a method is reachable by
 anyone holding the trait, so it is the type's contract rather than its hidden
@@ -192,7 +199,10 @@ automated consumer will be tempted to satisfy the gate, so they are named here:
 
 - **Widening visibility.** A `pub` function leaves `P` by definition. Correct
   only when the privacy was accidental and the function is genuinely part of
-  the contract; otherwise it trades a structural problem for an API one.
+  the contract; otherwise it trades a structural problem for an API one. Note
+  that `pub(crate)` is not a half-measure here — it does not lower the score at
+  all, because it does not make the function reachable by anything that was not
+  already reading the file.
 - **Rehousing logic in a trait impl.** Trait-impl methods do not count toward
   `P`. Implementing a trait because the abstraction is right is good design;
   implementing one to move methods out of the tally is not.
