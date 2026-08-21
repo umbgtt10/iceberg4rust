@@ -2,6 +2,9 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-mod analysis;
-mod invocation;
-mod reporting;
+pub mod analyzer;
+pub mod args;
+pub mod config;
+pub mod manifest_resolver;
+pub mod package_context;
+pub mod runner;

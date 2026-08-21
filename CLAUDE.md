@@ -43,9 +43,31 @@ Run gates:
 
 If either gate is not green, the work is not complete.
 
-Stage 2 runs three gates: CRAP, mirrored tests, and `iceberg4rust` against
-itself. A tool that enforces a bound it does not respect is not worth
-installing.
+Stage 1 is formatting, clippy and tests -- cargo built-ins only, so it works on
+a fresh checkout. Stage 2 is four gates, run in this order:
+
+| gate | asks |
+|---|---|
+| `cargo stern4rust` | do the house coding rules hold |
+| `cargo crap4rust` | is any function complex and untested |
+| `cargo twin4rust` | does every source file have a mirrored test file |
+| `cargo iceberg4rust` | is any file's private implementation risk too high |
+
+stern4rust runs **first** because its corrections are renames, file moves and
+directory splits: a layout it is about to reject is a layout the others would
+have measured for nothing. Its findings are also the cheapest to act on.
+
+All twenty-one of its rules are enforced, with nothing skipped and nothing
+unconfigured. `docs/header.txt` holds the three-line header every `.rs` file
+carries and `stern4rust.toml` names it -- in the config rather than the gate
+script, so a hand-run of `cargo stern4rust` checks exactly what the gate checks.
+
+`cargo install cargo-stern4rust`
+`cargo install cargo-crap4rust`
+`cargo install cargo-twin4rust`
+
+The last gate runs `iceberg4rust` against itself. A tool that enforces a bound
+it does not respect is not worth installing.
 
 The self-gate ceiling is a ratchet set just above the current worst file, not at
 the shipped default — a default-sized bound would never fire on a crate this
