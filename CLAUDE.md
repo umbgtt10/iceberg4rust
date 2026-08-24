@@ -38,13 +38,14 @@ That means:
 
 Run gates:
 
-`powershell -File scripts\run_stage_1.ps1`
-`powershell -File scripts\run_stage_2.ps1`
+`just stage1`
+`just stage2`
 
 If either gate is not green, the work is not complete.
 
 Stage 1 is formatting, clippy and tests -- cargo built-ins only, so it works on
-a fresh checkout. Stage 2 is four gates, run in this order:
+a fresh checkout. Stage 2 is `cargo xtask stage2`, which orchestrates four
+gates in this order:
 
 | gate | asks |
 |---|---|
@@ -62,9 +63,21 @@ unconfigured. `docs/header.txt` holds the three-line header every `.rs` file
 carries and `stern4rust.toml` names it -- in the config rather than the gate
 script, so a hand-run of `cargo stern4rust` checks exactly what the gate checks.
 
+`cargo install just`
 `cargo install cargo-stern4rust`
 `cargo install cargo-crap4rust`
 `cargo install cargo-twin4rust`
+`cargo install cargo-llvm-cov`
+`rustup component add llvm-tools`
+
+`cargo-llvm-cov` is crap4rust's own coverage backend rather than a house tool.
+A missing install surfaces only once stage 2 runs, as
+`cargo llvm-cov failed with exit code Some(101)`.
+
+The gates are a `justfile` plus an `xtask` workspace member, not scripts: one
+entry point that behaves the same on Linux, Windows and macOS, and gate
+orchestration in Rust rather than shell text-parsing. `.github/workflows/ci.yml`
+runs both stages on all three on every push and pull request.
 
 The last gate runs `iceberg4rust` against itself. A tool that enforces a bound
 it does not respect is not worth installing.
