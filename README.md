@@ -192,6 +192,12 @@ Required tools, none of which come with `cargo` itself:
 | `cargo-stern4rust` | `cargo install cargo-stern4rust` |
 | `cargo-crap4rust` | `cargo install cargo-crap4rust` |
 | `cargo-twin4rust` | `cargo install cargo-twin4rust` |
+| [`cargo-llvm-cov`](https://github.com/taiki-e/cargo-llvm-cov) | `cargo install cargo-llvm-cov` |
+| `llvm-tools` rustup component | `rustup component add llvm-tools` |
+
+`cargo-llvm-cov` is `cargo crap4rust`'s own coverage backend, not a house
+tool — it isn't visible until stage2 actually runs, at which point a missing
+install shows only as `cargo llvm-cov failed with exit code Some(101)`.
 
 `cargo-iceberg4rust` itself needs no separate install for the self-gate —
 `cargo xtask stage2` builds and runs it straight from this checkout.

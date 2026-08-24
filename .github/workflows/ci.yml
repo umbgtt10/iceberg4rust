@@ -26,7 +26,7 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-          components: clippy, rustfmt
+          components: clippy, rustfmt, llvm-tools
 
       - name: Cache cargo registry and build artifacts
         uses: Swatinem/rust-cache@v2
@@ -40,13 +40,16 @@ jobs:
       # caching cargo-installed binaries means `cargo install` silently
       # skips reinstalling even when a newer version is published. Always
       # installing fresh keeps CI honest about which version it gates on,
-      # at the cost of compiling three small crates from source each run.
+      # at the cost of compiling four small crates from source each run.
+      # cargo-llvm-cov is crap4rust's own coverage backend, not a house
+      # tool, but it has the same "not on a fresh runner" problem.
       - name: Install house gate tools
         if: matrix.stage == 'stage2'
         run: |
           cargo install cargo-stern4rust
           cargo install cargo-crap4rust
           cargo install cargo-twin4rust
+          cargo install cargo-llvm-cov
 
       - name: Run ${{ matrix.stage }}
         run: just ${{ matrix.stage }}
