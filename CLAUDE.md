@@ -100,6 +100,33 @@ entry point that behaves the same on Linux, Windows and macOS, and gate
 orchestration in Rust rather than shell text-parsing. `.github/workflows/ci.yml`
 runs both stages on all three on every push and pull request.
 
+### Branch protection
+
+`main` requires a pull request with all six CI jobs green; repository admins
+bypass both. That is enforced by a GitHub ruleset, which is server-side
+configuration rather than anything cargo or git reads — nothing in a clone or a
+fork carries it, and deleting it leaves no history.
+
+`.github/rulesets/main.json` is the copy of record. It is applied, not merely
+documentation:
+
+```sh
+gh api repos/umbgtt10/iceberg4rust/rulesets --method POST --input .github/rulesets/main.json
+```
+
+Use `--method PUT` against `.../rulesets/<id>` to update an existing one; the
+file round-trips, so re-applying an unchanged file is a no-op. Server-generated
+fields — `id`, `node_id`, timestamps, `_links`, `source`, `current_user_can_bypass`
+— are stripped, because they are per-instance and would go stale in git.
+
+The file is the state GitHub actually holds, including two defaults GitHub
+added on its own: `require_extra_approval_for_unattributed_changes` and the
+`allowed_merge_methods` list. Capturing them faithfully is the point — a
+setting nobody chose is worth having visible in review.
+
+Editing the ruleset in the web UI puts the file out of date, with nothing to
+catch the drift. Change the file and apply it.
+
 The last gate runs `iceberg4rust` against itself. A tool that enforces a bound
 it does not respect is not worth installing.
 
