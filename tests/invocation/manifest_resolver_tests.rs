@@ -159,17 +159,23 @@ fn relative_file_inside_base_dir_strips_prefix() {
     assert_eq!(relative, "src/lib.rs");
 }
 
+// `\` is a path separator on Windows but an ordinary filename byte on Unix,
+// so a `join()` argument that contains one lands differently on each: on
+// Windows it splits into an extra component before stripping; on Unix it
+// survives as part of one component's name. Either way the component(s)
+// left after strip_prefix carry a literal `\` into the same replace('\\',
+// "/") line, so this exercises normalization on every OS with one test.
 #[test]
 fn relative_file_normalizes_backslashes_to_forward_slashes() {
     // Arrange
-    let base_dir = Path::new("C:\\Users\\user\\project");
-    let file_path = Path::new("C:\\Users\\user\\project\\src\\lib.rs");
+    let base_dir = Path::new("project");
+    let file_path = base_dir.join("weird\\name.rs");
 
     // Act
-    let relative = ManifestResolver::relative_file(base_dir, file_path);
+    let relative = ManifestResolver::relative_file(base_dir, &file_path);
 
     // Assert
-    assert_eq!(relative, "src/lib.rs");
+    assert_eq!(relative, "weird/name.rs");
     assert!(!relative.contains('\\'));
 }
 

@@ -139,6 +139,18 @@ struct CrapReport {
     total_functions: u32,
     crappy_functions: u32,
     crappy_percent: f64,
+    functions: Vec<CrapFunction>,
+}
+
+#[derive(Deserialize)]
+struct CrapFunction {
+    name: String,
+    relative_file: String,
+    line: u32,
+    complexity: u32,
+    coverage: f64,
+    crap_score: f64,
+    verdict: String,
 }
 
 fn gate_crap4rust(manifest: &Path) -> Result<(), String> {
@@ -154,26 +166,49 @@ fn gate_crap4rust(manifest: &Path) -> Result<(), String> {
         .output()
         .map_err(|e| format!("failed to launch cargo crap4rust: {e}"))?;
 
-    if !output.status.success() {
-        return Err(format!("exit code {:?}", output.status.code()));
-    }
-
+    // crap4rust's own exit code goes non-zero the moment any function is at
+    // or above --threshold, --warn-only notwithstanding, so the exit code
+    // alone can't distinguish "found crappy functions" from "failed to run".
+    // The JSON is parsed first regardless of it; parsed data decides
+    // pass/fail, and a parse failure carries the exit code and stderr for
+    // whatever actually going wrong.
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let report = parse_crap_report(&stdout)?;
+    let report = parse_crap_report(&stdout).map_err(|parse_err| {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        format!(
+            "{parse_err} (exit code {:?}); stderr: {stderr}",
+            output.status.code()
+        )
+    })?;
 
     println!(
         "crap4rust: {}/{} functions crappy ({:.1}%)",
         report.crappy_functions, report.total_functions, report.crappy_percent
     );
 
-    if report.crappy_functions > 0 {
-        Err(format!(
-            "{} crappy functions detected",
-            report.crappy_functions
-        ))
-    } else {
-        Ok(())
+    if report.crappy_functions == 0 {
+        return Ok(());
     }
+
+    for function in &report.functions {
+        if function.verdict != "Clean" {
+            println!(
+                "  {}:{} {} (complexity {}, coverage {:.0}%, crap {:.1}) [{}]",
+                function.relative_file,
+                function.line,
+                function.name,
+                function.complexity,
+                function.coverage * 100.0,
+                function.crap_score,
+                function.verdict,
+            );
+        }
+    }
+
+    Err(format!(
+        "{} crappy functions detected",
+        report.crappy_functions
+    ))
 }
 
 // crap4rust's coverage pass runs the crate's own test suite first, so its
