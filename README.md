@@ -207,8 +207,9 @@ install shows only as `cargo llvm-cov failed with exit code Some(101)`.
 `cargo xtask stage2` builds and runs it straight from this checkout.
 
 CI (`.github/workflows/ci.yml`) runs both stages on Ubuntu, Windows and macOS
-on every push and pull request. `main` requires a pull request with those six
-jobs green; the ruleset that enforces it is kept in
+for every pull request and every push to `main` — a push to any other branch
+runs nothing until a pull request opens. `main` requires a pull request with
+those six jobs green; the ruleset that enforces it is kept in
 [`.github/rulesets/main.json`](.github/rulesets/main.json) and applied with
 `gh api`, since GitHub holds it as server-side config that no clone or fork
 would otherwise carry.

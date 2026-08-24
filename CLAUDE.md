@@ -110,14 +110,26 @@ fork carries it, and deleting it leaves no history.
 `.github/rulesets/main.json` is the copy of record. It is applied, not merely
 documentation:
 
+A ruleset already exists, so the usual operation is an update rather than a
+create. POST is for the first application only — running it again makes a
+second ruleset rather than replacing the first, and both then apply. Find the
+id and update in place:
+
+```sh
+gh api repos/umbgtt10/iceberg4rust/rulesets --jq '.[] | "\(.id)\t\(.name)"'
+gh api repos/umbgtt10/iceberg4rust/rulesets/<id> --method PUT --input .github/rulesets/main.json
+```
+
+Only if the repository has no ruleset at all:
+
 ```sh
 gh api repos/umbgtt10/iceberg4rust/rulesets --method POST --input .github/rulesets/main.json
 ```
 
-Use `--method PUT` against `.../rulesets/<id>` to update an existing one; the
-file round-trips, so re-applying an unchanged file is a no-op. Server-generated
+The file round-trips, so applying an unchanged one is a no-op. Server-generated
 fields — `id`, `node_id`, timestamps, `_links`, `source`, `current_user_can_bypass`
-— are stripped, because they are per-instance and would go stale in git.
+— are stripped, because they are per-instance and would go stale in git. That is
+also why the id is looked up rather than recorded here.
 
 The file is the state GitHub actually holds, including two defaults GitHub
 added on its own: `require_extra_approval_for_unattributed_changes` and the
