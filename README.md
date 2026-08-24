@@ -170,7 +170,11 @@ because an automated consumer will find them before it finds the real fix.
 
 ## Development
 
-Mandatory after every change to `src/` or `tests/`:
+The repository is a workspace of two members: `core/` is the published crate
+(package `cargo-iceberg4rust`, library `iceberg4rust`), and `xtask/` is the
+gate orchestration behind `cargo xtask`. Both are gated.
+
+Mandatory after every change to either member's `src/` or `tests/`:
 
 ```sh
 just stage1

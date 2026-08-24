@@ -1,5 +1,13 @@
 [workspace]
-members = ["xtask"]
+members = ["core", "xtask"]
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.85"
+authors = ["Umberto Gotti <umberto.gotti@umbertogotti.dev>"]
+license = "MIT"
+repository = "https://github.com/umbgtt10/iceberg4rust"
 
 [workspace.dependencies]
 anyhow = "1.0.98"
@@ -10,45 +18,3 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 syn = { version = "2.0.117", features = ["full", "visit"] }
 walkdir = "2.5.0"
-
-[package]
-name = "cargo-iceberg4rust"
-version = "0.2.0"
-edition = "2024"
-rust-version = "1.85"
-authors = ["Umberto Gotti <umberto.gotti@umbertogotti.dev>"]
-description = "Cargo subcommand that measures how much private implementation a Rust source file hides beneath its public surface"
-license = "MIT"
-readme = "README.md"
-repository = "https://github.com/umbgtt10/iceberg4rust"
-documentation = "https://docs.rs/cargo-iceberg4rust"
-keywords = ["cargo", "subcommand", "metrics", "complexity", "cli"]
-categories = ["development-tools::cargo-plugins", "development-tools", "command-line-utilities"]
-
-autotests = false
-
-[lib]
-name = "iceberg4rust"
-
-[[bin]]
-name = "cargo-iceberg4rust"
-path = "src/main.rs"
-
-[[test]]
-name = "all_tests"
-path = "tests/all_tests.rs"
-
-[dependencies]
-anyhow = { workspace = true }
-cargo_metadata = { workspace = true }
-clap = { workspace = true }
-proc-macro2 = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-syn = { workspace = true }
-walkdir = { workspace = true }
-
-[dev-dependencies]
-clap = { workspace = true }
-serde_json = { workspace = true }
-syn = { workspace = true }
