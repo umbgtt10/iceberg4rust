@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: ${{ matrix.stage }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        stage: [stage1, stage2]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+
+      - name: Cache cargo registry and build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.stage }}
+
+      - name: Install just
+        uses: extractions/setup-just@v4
+
+      # Not cached: these are house tools with no prebuilt binaries, and
+      # caching cargo-installed binaries means `cargo install` silently
+      # skips reinstalling even when a newer version is published. Always
+      # installing fresh keeps CI honest about which version it gates on,
+      # at the cost of compiling three small crates from source each run.
+      - name: Install house gate tools
+        if: matrix.stage == 'stage2'
+        run: |
+          cargo install cargo-stern4rust
+          cargo install cargo-crap4rust
+          cargo install cargo-twin4rust
+
+      - name: Run ${{ matrix.stage }}
+        run: just ${{ matrix.stage }}

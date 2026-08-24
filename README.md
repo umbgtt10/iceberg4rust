@@ -1,5 +1,7 @@
 # cargo-iceberg4rust
 
+[![CI](https://github.com/umbgtt10/iceberg4rust/actions/workflows/ci.yml/badge.svg)](https://github.com/umbgtt10/iceberg4rust/actions/workflows/ci.yml)
+
 **How much is your file hiding below the waterline?**
 
 `cargo-iceberg4rust` is a static analysis tool that measures **file-level private
@@ -163,6 +165,39 @@ because an automated consumer will find them before it finds the real fix.
   complexity is weighted twice: once by existing, once by depth.
 - **Struct usage detection is syntactic.** See
   [`docs/OPEN_POINTS.md`](docs/OPEN_POINTS.md).
+
+---
+
+## Development
+
+Mandatory after every change to `src/` or `tests/`:
+
+```sh
+just stage1
+just stage2
+```
+
+Stage 1 is formatting, clippy and tests — cargo built-ins only, so it works on
+a fresh checkout. Stage 2 runs `cargo xtask stage2`, which runs, in this
+order: `cargo stern4rust` (house coding rules), `cargo crap4rust` (complexity
+vs. coverage), `cargo twin4rust` (every source file has a mirrored test
+file), and `cargo-iceberg4rust` against itself — a tool that enforces a bound
+it does not respect is not worth installing.
+
+Required tools, none of which come with `cargo` itself:
+
+| Tool | Install |
+|---|---|
+| [`just`](https://github.com/casey/just) | `cargo install just` |
+| `cargo-stern4rust` | `cargo install cargo-stern4rust` |
+| `cargo-crap4rust` | `cargo install cargo-crap4rust` |
+| `cargo-twin4rust` | `cargo install cargo-twin4rust` |
+
+`cargo-iceberg4rust` itself needs no separate install for the self-gate —
+`cargo xtask stage2` builds and runs it straight from this checkout.
+
+CI (`.github/workflows/ci.yml`) runs both stages on Ubuntu, Windows and macOS
+on every push and pull request.
 
 ---
 
