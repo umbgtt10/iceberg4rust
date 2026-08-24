@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use iceberg4rust::analysis::test_attr_checker::TestAttrChecker;
+use syn::Attribute;
 use syn::parse_quote;
 
 fn checker() -> TestAttrChecker {
@@ -60,7 +61,7 @@ fn derive_attr_returns_false() {
 #[test]
 fn empty_attrs_returns_false() {
     // Arrange
-    let attrs: Vec<syn::Attribute> = vec![];
+    let attrs: Vec<Attribute> = vec![];
 
     // Act
     let result = checker().has_test_attrs(&attrs);

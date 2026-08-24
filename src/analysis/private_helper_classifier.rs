@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use syn::{ImplItem, Item, ItemImpl, ItemMod, Type, Visibility};
+use syn::{ImplItem, Item, ItemImpl, ItemMod, ItemStruct, Type, Visibility};
 
 use crate::analysis::helper_struct_kind::HelperStructKind;
 use crate::analysis::test_attr_checker::TestAttrChecker;
@@ -43,11 +43,7 @@ impl PrivateHelperClassifier {
         }
     }
 
-    fn try_insert_data_struct(
-        &mut self,
-        item_struct: &syn::ItemStruct,
-        primary_struct: Option<&str>,
-    ) {
+    fn try_insert_data_struct(&mut self, item_struct: &ItemStruct, primary_struct: Option<&str>) {
         let name = item_struct.ident.to_string();
         if matches!(item_struct.vis, Visibility::Inherited)
             && primary_struct.is_none_or(|primary| primary != name)

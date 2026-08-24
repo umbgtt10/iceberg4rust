@@ -2,6 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use cargo_metadata::Metadata;
 use cargo_metadata::Target;
 use iceberg4rust::invocation::config::Config;
 use iceberg4rust::invocation::manifest_resolver::ManifestResolver;
@@ -223,7 +224,7 @@ fn resolve_packages_against_this_package_returns_it_with_its_source_root() {
 #[test]
 fn select_packages_with_requested_name_returns_matching_package() {
     // Arrange
-    let metadata: cargo_metadata::Metadata = from_value(serde_json::json!({
+    let metadata: Metadata = from_value(serde_json::json!({
         "packages": [
             {
                 "name": "foo",
@@ -296,7 +297,7 @@ fn select_packages_with_requested_name_returns_matching_package() {
 #[test]
 fn select_packages_with_unknown_name_returns_error() {
     // Arrange
-    let metadata: cargo_metadata::Metadata = from_value(serde_json::json!({
+    let metadata: Metadata = from_value(serde_json::json!({
         "packages": [
             {
                 "name": "foo",
@@ -343,7 +344,7 @@ fn select_packages_with_unknown_name_returns_error() {
 #[test]
 fn select_packages_without_requested_uses_root() {
     // Arrange
-    let metadata: cargo_metadata::Metadata = from_value(serde_json::json!({
+    let metadata: Metadata = from_value(serde_json::json!({
         "packages": [
             {
                 "name": "root-pkg",
