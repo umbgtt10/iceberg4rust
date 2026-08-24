@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-No change to the tool's behaviour, its API or its scoring. Everything below is
+## [0.3.0] - 2026-08-24
+
+No change to the tool's behaviour, its API or its scoring: a file scores exactly
+what it scored on 0.2.0, and no threshold needs revisiting. Everything below is
 how the repository builds and gates itself.
 
 ### Changed
