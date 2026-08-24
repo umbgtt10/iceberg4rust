@@ -38,6 +38,8 @@ how the repository builds and gates itself.
 - `.github/workflows/ci.yml` runs both stages on Ubuntu, Windows and macOS for
   every push and pull request.
 
+## [0.2.0] - 2026-08-17
+
 Scores rise. A gate that passes on 0.1.1 may fail on 0.2.0 without the code
 having changed, so treat this as a threshold review rather than a drop-in
 upgrade. No API changed; the scoring did.
