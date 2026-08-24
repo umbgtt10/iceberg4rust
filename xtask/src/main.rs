@@ -175,8 +175,17 @@ fn gate_crap4rust(manifest: &Path) -> Result<(), String> {
     let stdout = String::from_utf8_lossy(&output.stdout);
     let report = parse_crap_report(&stdout).map_err(|parse_err| {
         let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout_tail: String = stdout
+            .lines()
+            .rev()
+            .take(30)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .collect::<Vec<_>>()
+            .join("\n");
         format!(
-            "{parse_err} (exit code {:?}); stderr: {stderr}",
+            "{parse_err} (exit code {:?})\nstderr: {stderr}\nstdout tail:\n{stdout_tail}",
             output.status.code()
         )
     })?;
