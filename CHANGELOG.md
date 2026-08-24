@@ -6,7 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-08-17
+No change to the tool's behaviour, its API or its scoring. Everything below is
+how the repository builds and gates itself.
+
+### Changed
+
+- The repository is a workspace of two members: `core/` holds the published
+  crate, `xtask/` holds the gate orchestration. The root manifest is virtual.
+
+  A single root package made the package directory the whole repository, so
+  `xtask/tests/` was judged as source belonging to `core` and every test in it
+  broke `test-free-source`. Siblings under a virtual root each own their
+  directory, which is what lets `xtask` carry its own `tests/`.
+
+  `cargo publish` now runs from `core/`. The published crate is unchanged:
+  same name, version, metadata and contents.
+
+- The gates are a `justfile` plus `cargo xtask` rather than two PowerShell
+  scripts, so one entry point serves Linux, Windows and macOS. `cargo xtask
+  stage2` reads crap4rust's `--output-format json` instead of parsing its
+  human-readable table, and names every offending function when it fails.
+
+- Both members are gated, so the crate that enforces the bar is now held to
+  it: 110 functions measured where 77 were before.
+
+### Added
+
+- `.github/workflows/ci.yml` runs both stages on Ubuntu, Windows and macOS for
+  every push and pull request.
 
 Scores rise. A gate that passes on 0.1.1 may fail on 0.2.0 without the code
 having changed, so treat this as a threshold review rather than a drop-in

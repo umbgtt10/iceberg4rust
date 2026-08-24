@@ -32,9 +32,30 @@ That means:
 - do not pull assumptions from sibling repositories or crates
 - do not propose cross-repository changes by default
 
+## Layout
+
+A workspace of two members, with a virtual root that holds no package:
+
+| member | what it is |
+|---|---|
+| `core/` | the published crate. Package `cargo-iceberg4rust`, library `iceberg4rust`. |
+| `xtask/` | gate orchestration, run as `cargo xtask`. `publish = false`. |
+
+Both are gated. The split is not cosmetic: with a single root package the
+package directory *is* the repository, so `xtask/tests/` was read as source
+belonging to the root package and every test in it broke `test-free-source`.
+Siblings under a virtual root each get their own package directory, which is
+what lets `xtask` carry its own `tests/` and be measured like any other crate.
+
+Shared dependency versions and metadata live in the root `[workspace.dependencies]`
+and `[workspace.package]`; members inherit with `{ workspace = true }`, which is
+what `workspace-dependencies` enforces. `LICENSE` stays at the root and is not
+copied into the members, matching the rest of the tool family; `license = "MIT"`
+in each manifest is what declares it.
+
 ## Quality Gates
 
-### Mandatory after every change to `src/` or `tests/`
+### Mandatory after every change to any member's `src/` or `tests/`
 
 Run gates:
 
@@ -92,7 +113,7 @@ green.
 The crate publishes as `cargo-iceberg4rust` so cargo resolves `cargo iceberg4rust`,
 matching `cargo-crap4rust` and `cargo-dry4rust`. The library is `iceberg4rust`.
 
-`src/main.rs` strips the repeated subcommand name that cargo inserts as
+`core/src/main.rs` strips the repeated subcommand name that cargo inserts as
 `argv[1]`; running the binary directly does not repeat it, so the strip is
 conditional. `Args::without_cargo_subcommand` owns that rule and is tested.
 

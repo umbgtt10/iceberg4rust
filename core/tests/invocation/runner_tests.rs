@@ -6,12 +6,12 @@ use clap::Parser;
 use iceberg4rust::invocation::args::Args;
 use iceberg4rust::invocation::runner::Runner;
 
-// With no --manifest-path the manifest is resolved from the working directory.
-// This crate is a single package, so resolution succeeds and the run analyses
-// it. A workspace of several members errors instead, asking for --package —
-// which is why this assertion is the opposite of what it was inside one.
+// With no --manifest-path the manifest is resolved from the working directory,
+// which resolves to this workspace rather than to one member. A virtual root
+// has no package of its own to default to, so the run has to ask which member
+// to analyse instead of guessing.
 #[test]
-fn run_with_no_arguments_analyses_the_current_package() {
+fn run_with_no_arguments_in_a_workspace_asks_for_a_package() {
     // Arrange
     let args = Args::parse_from(["cargo-iceberg4rust"]);
 
@@ -19,7 +19,10 @@ fn run_with_no_arguments_analyses_the_current_package() {
     let result = Runner::run(args);
 
     // Assert
-    assert!(result.is_ok());
+    assert!(
+        result.is_err_and(|error| error.to_string().contains("--package")),
+        "a virtual workspace root must name the member rather than pick one"
+    );
 }
 
 #[test]

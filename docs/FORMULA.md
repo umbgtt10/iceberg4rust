@@ -1,6 +1,6 @@
 # Formula
 
-Every scoring term, in full, kept in sync with `src/`.
+Every scoring term, in full, kept in sync with `core/src/`.
 
 `iceberg4rust` computes a file-level score for how much private implementation a
 Rust source file hides beneath its public surface — the mass below the waterline.
