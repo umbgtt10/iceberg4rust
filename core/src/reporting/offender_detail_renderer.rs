@@ -21,12 +21,13 @@ impl OffenderDetailRenderer {
 
         let mut out = String::from("Offender detail:\n");
         for offender in offenders {
-            Self::render_offender(&mut out, offender);
+            out.push_str(&Self::render_offender(offender));
         }
         out
     }
 
-    fn render_offender(out: &mut String, offender: &FileRiskReport) {
+    fn render_offender(offender: &FileRiskReport) -> String {
+        let mut out = String::new();
         let _ = writeln!(
             out,
             "\n  {}  {}  (risk {:.2}, {} private fns, complexity {})",
@@ -39,10 +40,11 @@ impl OffenderDetailRenderer {
         let _ = writeln!(out, "    {:>6}  {:>10}  function", "line", "complexity");
 
         for function in Self::by_descending_complexity(&offender.functions) {
-            Self::render_function(out, function);
+            out.push_str(&Self::render_function(function));
         }
 
-        Self::render_structs(out, offender);
+        out.push_str(&Self::render_structs(offender));
+        out
     }
 
     fn by_descending_complexity(
@@ -58,20 +60,23 @@ impl OffenderDetailRenderer {
         ordered
     }
 
-    fn render_function(out: &mut String, function: &PrivateFunctionReport) {
+    fn render_function(function: &PrivateFunctionReport) -> String {
         // A trait method is flagged because it does not count toward the private
         // surface, so a reader is not left wondering why the tally disagrees.
         let marker = if function.is_hidden { "" } else { "  (trait)" };
+        let mut out = String::new();
         let _ = writeln!(
             out,
             "    {:>6}  {:>10}  {}{}",
             function.line, function.complexity, function.name, marker,
         );
+        out
     }
 
-    fn render_structs(out: &mut String, offender: &FileRiskReport) {
+    fn render_structs(offender: &FileRiskReport) -> String {
+        let mut out = String::new();
         if offender.data_structs.is_empty() && offender.behavioral_structs.is_empty() {
-            return;
+            return out;
         }
         let _ = writeln!(
             out,
@@ -79,5 +84,6 @@ impl OffenderDetailRenderer {
             offender.data_structs.join(", "),
             offender.behavioral_structs.join(", "),
         );
+        out
     }
 }

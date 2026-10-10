@@ -21,7 +21,7 @@ impl CommentStripper {
 
         while index < chars.len() {
             if self.in_block_comment {
-                self.skip_block_comment_end(&chars, &mut index);
+                index = self.skip_block_comment_end(&chars, index);
                 continue;
             }
 
@@ -56,12 +56,12 @@ impl CommentStripper {
         count
     }
 
-    fn skip_block_comment_end(&mut self, chars: &[char], index: &mut usize) {
-        if *index + 1 < chars.len() && chars[*index] == '*' && chars[*index + 1] == '/' {
+    fn skip_block_comment_end(&mut self, chars: &[char], index: usize) -> usize {
+        if index + 1 < chars.len() && chars[index] == '*' && chars[index + 1] == '/' {
             self.in_block_comment = false;
-            *index += 2;
+            index + 2
         } else {
-            *index += 1;
+            index + 1
         }
     }
 

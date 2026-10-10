@@ -79,10 +79,15 @@ stern4rust runs **first** because its corrections are renames, file moves and
 directory splits: a layout it is about to reject is a layout the others would
 have measured for nothing. Its findings are also the cheapest to act on.
 
-All twenty-one of its rules are enforced, with nothing skipped and nothing
-unconfigured. `docs/header.txt` holds the three-line header every `.rs` file
-carries and `stern4rust.toml` names it -- in the config rather than the gate
-script, so a hand-run of `cargo stern4rust` checks exactly what the gate checks.
+All twenty-two of its rules are enforced, with nothing skipped, nothing
+selected and nothing unconfigured: `stern4rust.toml` carries no `skip` and no
+`rules` list, and there is no stern baseline. That includes `returned-mutations`
+(0.14.0): no `&mut` parameter in `src/`, so a helper returns what it built
+rather than writing it through an argument. `docs/header.txt` holds the
+three-line header every `.rs` file carries and `stern4rust.toml` names it -- in
+the config rather than the gate script, so a hand-run of `cargo stern4rust`
+checks exactly what the gate checks. `spdx-matches-manifest` reads `license`
+from each member's manifest, inherited from `[workspace.package]`.
 
 `cargo install just`
 `cargo install cargo-stern4rust`
