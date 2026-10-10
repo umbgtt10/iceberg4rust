@@ -65,12 +65,13 @@ Run gates:
 If either gate is not green, the work is not complete.
 
 Stage 1 is formatting, clippy and tests -- cargo built-ins only, so it works on
-a fresh checkout. Stage 2 is `cargo xtask stage2`, which orchestrates four
+a fresh checkout. Stage 2 is `cargo xtask stage2`, which orchestrates five
 gates in this order:
 
 | gate | asks |
 |---|---|
 | `cargo stern4rust` | do the house coding rules hold |
+| `cargo dry4rust` | did this change add duplicated code |
 | `cargo crap4rust` | is any function complex and untested |
 | `cargo twin4rust` | does every source file have a mirrored test file |
 | `cargo iceberg4rust` | is any file's private implementation risk too high |
@@ -89,8 +90,30 @@ the config rather than the gate script, so a hand-run of `cargo stern4rust`
 checks exactly what the gate checks. `spdx-matches-manifest` reads `license`
 from each member's manifest, inherited from `[workspace.package]`.
 
+dry4rust runs **second** for the same reason stern4rust is first: removing a
+duplicate moves code between files, which changes what the three behind it
+measure. It scans `core/src` only -- tests repeat their arrangement by design --
+and checks with zero ceilings against `dry4rust-baseline.json`, the duplication
+already there when the gate arrived. So it fails on what a change adds, not on
+what it inherited; a duplicate removed is admitted, a copy added to a recorded
+group is not.
+
+The baseline is empty. The two exact groups the first measurement found -- two
+`Visit` methods recording a path's last segment, and three two-character
+comment-marker tests in `CommentStripper` -- were shared rather than recorded,
+so any duplicated unit at or above the floor fails the gate.
+
+It counts only code units of 25 AST nodes or more, the floor the rest of the
+tool family uses. Below that sit one-line accessors and trait methods whose
+sameness is the signature's rather than a copy.
+
+Re-record the baseline only to drop groups that are gone, never to admit new
+ones, and at the same floor -- a baseline matches only at the floor it was
+recorded at: `cargo dry4rust --path core/src --min-nodes 25 --baseline "$PWD/dry4rust-baseline.json" baseline`.
+
 `cargo install just`
 `cargo install cargo-stern4rust`
+`cargo install cargo-dry4rust`
 `cargo install cargo-crap4rust`
 `cargo install cargo-twin4rust`
 `cargo install cargo-llvm-cov`
