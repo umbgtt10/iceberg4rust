@@ -2,6 +2,10 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+const LINE_COMMENT_START: [char; 2] = ['/', '/'];
+const BLOCK_COMMENT_START: [char; 2] = ['/', '*'];
+const BLOCK_COMMENT_END: [char; 2] = ['*', '/'];
+
 #[derive(Default)]
 pub struct CommentStripper {
     in_block_comment: bool,
@@ -25,11 +29,11 @@ impl CommentStripper {
                 continue;
             }
 
-            if Self::starts_line_comment(&chars, index) {
+            if Self::pair_at(&chars, index, LINE_COMMENT_START) {
                 break;
             }
 
-            if Self::starts_block_comment(&chars, index) {
+            if Self::pair_at(&chars, index, BLOCK_COMMENT_START) {
                 self.in_block_comment = true;
                 index += 2;
                 continue;
@@ -57,7 +61,7 @@ impl CommentStripper {
     }
 
     fn skip_block_comment_end(&mut self, chars: &[char], index: usize) -> usize {
-        if index + 1 < chars.len() && chars[index] == '*' && chars[index + 1] == '/' {
+        if Self::pair_at(chars, index, BLOCK_COMMENT_END) {
             self.in_block_comment = false;
             index + 2
         } else {
@@ -65,11 +69,7 @@ impl CommentStripper {
         }
     }
 
-    fn starts_line_comment(chars: &[char], index: usize) -> bool {
-        index + 1 < chars.len() && chars[index] == '/' && chars[index + 1] == '/'
-    }
-
-    fn starts_block_comment(chars: &[char], index: usize) -> bool {
-        index + 1 < chars.len() && chars[index] == '/' && chars[index + 1] == '*'
+    fn pair_at(chars: &[char], index: usize, pair: [char; 2]) -> bool {
+        index + 1 < chars.len() && chars[index] == pair[0] && chars[index + 1] == pair[1]
     }
 }

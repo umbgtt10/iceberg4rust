@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use syn::visit::{Visit, visit_expr_call, visit_expr_struct, visit_type_path};
-use syn::{Block, Expr, ExprCall, ExprStruct, ReturnType, Signature, TypePath};
+use syn::{Block, Expr, ExprCall, ExprStruct, Path, ReturnType, Signature, TypePath};
 
 use crate::analysis::helper_struct_kind::HelperStructKind;
 
@@ -33,33 +33,30 @@ impl<'a> StructUsageCollector<'a> {
         }
     }
 
-    fn record_if_private_struct(&mut self, ident: &str) {
-        if self.helper_structs.contains_key(ident) {
-            self.found.insert(ident.to_string());
+    fn record_if_private_struct(&mut self, path: &Path) {
+        if let Some(segment) = path.segments.last() {
+            let ident = segment.ident.to_string();
+            if self.helper_structs.contains_key(&ident) {
+                self.found.insert(ident);
+            }
         }
     }
 }
 
 impl<'ast, 'a> Visit<'ast> for StructUsageCollector<'a> {
     fn visit_type_path(&mut self, node: &'ast TypePath) {
-        if let Some(segment) = node.path.segments.last() {
-            self.record_if_private_struct(&segment.ident.to_string());
-        }
+        self.record_if_private_struct(&node.path);
         visit_type_path(self, node);
     }
 
     fn visit_expr_struct(&mut self, node: &'ast ExprStruct) {
-        if let Some(segment) = node.path.segments.last() {
-            self.record_if_private_struct(&segment.ident.to_string());
-        }
+        self.record_if_private_struct(&node.path);
         visit_expr_struct(self, node);
     }
 
     fn visit_expr_call(&mut self, node: &'ast ExprCall) {
-        if let Expr::Path(expr_path) = node.func.as_ref()
-            && let Some(segment) = expr_path.path.segments.last()
-        {
-            self.record_if_private_struct(&segment.ident.to_string());
+        if let Expr::Path(expr_path) = node.func.as_ref() {
+            self.record_if_private_struct(&expr_path.path);
         }
         visit_expr_call(self, node);
     }
