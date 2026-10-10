@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-10
+
+No change to the tool's behaviour, its CLI or its scoring: same output, same
+exit codes, and a file scores exactly what it scored on 0.3.0. Checked by
+running the 0.3.0 binary and this one side by side over this repository, a
+sibling tool's workspace and a fixture of awkward comments and struct uses,
+in text and `--json`: every byte and every exit code matched.
+
+A patch rather than a minor release because no `pub` item of the
+`iceberg4rust` library changed signature. Every source change below is to a
+private function.
+
+### Changed
+
+- The workspace satisfies all twenty-two `stern4rust` 0.14.0 rules, with
+  nothing skipped, selected, unconfigured or baselined. The new
+  `returned-mutations` rule found four `&mut` parameters, all fixed rather than
+  skipped: `CommentStripper::skip_block_comment_end` returns the advanced index,
+  and the three `OffenderDetailRenderer` helpers return the text they build,
+  appended in the order they used to write it.
+- Duplicated code is shared rather than copied. `dry4rust` found two exact
+  groups in `core/src` at 25 AST nodes: two `Visit` methods that each recorded
+  a path's last segment, now one `record_if_private_struct` taking the path;
+  and three two-character comment-marker tests in `CommentStripper`, now one
+  `pair_at` with named pairs. None remain.
+- Stage 2 gains a fifth gate, `cargo dry4rust`, second after `stern4rust`: no
+  duplicated code in `core/src` beyond `dry4rust-baseline.json`, which records
+  nothing, counting units of 25 AST nodes or more. CI installs
+  `cargo-dry4rust` alongside the other stage-2 tools.
+
 ## [0.3.0] - 2026-08-24
 
 No change to the tool's behaviour, its API or its scoring: a file scores exactly
