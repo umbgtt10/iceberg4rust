@@ -77,7 +77,7 @@ impl PrivateHelperClassifier {
             return;
         }
 
-        let Some(target_name) = impl_target_name(item_impl) else {
+        let Some(target_name) = Self::impl_target_name(item_impl) else {
             return;
         };
         if !self.helper_structs.contains_key(&target_name) {
@@ -102,16 +102,16 @@ impl PrivateHelperClassifier {
             self.upgrade_impls(inline_items);
         }
     }
-}
 
-fn impl_target_name(item_impl: &ItemImpl) -> Option<String> {
-    let Type::Path(type_path) = item_impl.self_ty.as_ref() else {
-        return None;
-    };
+    fn impl_target_name(item_impl: &ItemImpl) -> Option<String> {
+        let Type::Path(type_path) = item_impl.self_ty.as_ref() else {
+            return None;
+        };
 
-    type_path
-        .path
-        .segments
-        .last()
-        .map(|segment| segment.ident.to_string())
+        type_path
+            .path
+            .segments
+            .last()
+            .map(|segment| segment.ident.to_string())
+    }
 }

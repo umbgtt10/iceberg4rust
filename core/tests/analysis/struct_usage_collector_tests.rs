@@ -3,16 +3,17 @@
 // SPDX-License-Identifier: MIT
 
 use iceberg4rust::analysis::helper_struct_kind::HelperStructKind;
-use iceberg4rust::analysis::struct_usage_collector::collect_used_private_structs;
+use iceberg4rust::analysis::struct_usage_collector::StructUsageCollector;
 use std::collections::BTreeMap;
 use syn::{Block, File, Item, Signature, parse_file};
 
 fn collect_used(source: &str, helper_structs: &BTreeMap<String, HelperStructKind>) -> Vec<String> {
     let file: File = parse_file(source).expect("failed to parse source");
     let (sig, block) = first_fn_sig_and_block(&file);
-    let mut result: Vec<String> = collect_used_private_structs(sig, block, helper_structs)
-        .into_iter()
-        .collect();
+    let mut result: Vec<String> =
+        StructUsageCollector::collect_used_private_structs(sig, block, helper_structs)
+            .into_iter()
+            .collect();
     result.sort();
     result
 }

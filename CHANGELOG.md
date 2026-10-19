@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+The tool's behaviour, command line and scoring are unchanged. One `pub` free
+function became an associated function, for stern4rust 0.17.0's new
+`owned-functions` rule -- a file with a subject holds no free function.
+
+### Changed
+- `analysis::struct_usage_collector::collect_used_private_structs` is
+  `StructUsageCollector::collect_used_private_structs`, on a now-public
+  `StructUsageCollector`. Three private helpers -- `is_private_item`,
+  `impl_target_name` and `first_struct_name` -- move into the impl blocks of
+  the types that call them.
+- All twenty-four stern4rust rules apply to every workspace member.
+
 ## [0.3.1] - 2026-10-10
 
 No change to the tool's behaviour, its CLI or its scoring: same output, same

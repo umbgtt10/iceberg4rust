@@ -80,7 +80,7 @@ stern4rust runs **first** because its corrections are renames, file moves and
 directory splits: a layout it is about to reject is a layout the others would
 have measured for nothing. Its findings are also the cheapest to act on.
 
-All twenty-two of its rules are enforced, with nothing skipped, nothing
+All twenty-four of its rules are enforced, with nothing skipped, nothing
 selected and nothing unconfigured: `stern4rust.toml` carries no `skip` and no
 `rules` list, and there is no stern baseline. That includes `returned-mutations`
 (0.14.0): no `&mut` parameter in `src/`, so a helper returns what it built

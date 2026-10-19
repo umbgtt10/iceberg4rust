@@ -9,18 +9,7 @@ use syn::{Block, Expr, ExprCall, ExprStruct, Path, ReturnType, Signature, TypePa
 
 use crate::analysis::helper_struct_kind::HelperStructKind;
 
-pub fn collect_used_private_structs(
-    signature: &Signature,
-    block: &Block,
-    helper_structs: &BTreeMap<String, HelperStructKind>,
-) -> BTreeSet<String> {
-    let mut collector = StructUsageCollector::new(helper_structs);
-    collector.visit_signature(signature);
-    collector.visit_block(block);
-    collector.found
-}
-
-struct StructUsageCollector<'a> {
+pub struct StructUsageCollector<'a> {
     helper_structs: &'a BTreeMap<String, HelperStructKind>,
     found: BTreeSet<String>,
 }
@@ -40,6 +29,17 @@ impl<'a> StructUsageCollector<'a> {
                 self.found.insert(ident);
             }
         }
+    }
+
+    pub fn collect_used_private_structs(
+        signature: &Signature,
+        block: &Block,
+        helper_structs: &BTreeMap<String, HelperStructKind>,
+    ) -> BTreeSet<String> {
+        let mut collector = StructUsageCollector::new(helper_structs);
+        collector.visit_signature(signature);
+        collector.visit_block(block);
+        collector.found
     }
 }
 

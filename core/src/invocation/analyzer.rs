@@ -89,7 +89,7 @@ impl Analyzer {
         let syntax = parse_file(source).context("failed to parse Rust source")?;
 
         let effective_loc = CommentStripper::count_effective_loc(source);
-        let primary_struct = first_struct_name(&syntax);
+        let primary_struct = Self::first_struct_name(&syntax);
         let classifier = PrivateHelperClassifier::new(&syntax.items, primary_struct.as_deref());
         let helper_structs = classifier.into_map();
         let collector = PrivateFunctionCollector::new(&helper_structs);
@@ -186,14 +186,14 @@ impl Analyzer {
                 + Self::DATA_STRUCT_WEIGHT * (data_private_struct_count as f64)
                 + Self::BEHAVIORAL_STRUCT_WEIGHT * (behavioral_private_struct_count as f64))
     }
-}
 
-fn first_struct_name(syntax: &File) -> Option<String> {
-    syntax.items.iter().find_map(|item| {
-        if let Item::Struct(item_struct) = item {
-            Some(item_struct.ident.to_string())
-        } else {
-            None
-        }
-    })
+    fn first_struct_name(syntax: &File) -> Option<String> {
+        syntax.items.iter().find_map(|item| {
+            if let Item::Struct(item_struct) = item {
+                Some(item_struct.ident.to_string())
+            } else {
+                None
+            }
+        })
+    }
 }

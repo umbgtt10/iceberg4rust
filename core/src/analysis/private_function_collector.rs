@@ -10,7 +10,7 @@ use syn::{
 
 use crate::analysis::complexity_scorer::ComplexityScorer;
 use crate::analysis::helper_struct_kind::HelperStructKind;
-use crate::analysis::struct_usage_collector::collect_used_private_structs;
+use crate::analysis::struct_usage_collector::StructUsageCollector;
 use crate::analysis::test_attr_checker::TestAttrChecker;
 use crate::reporting::private_function_metrics::PrivateFunctionMetrics;
 
@@ -48,7 +48,7 @@ impl<'a> PrivateFunctionCollector<'a> {
     }
 
     fn process_fn(&mut self, item_fn: &ItemFn) {
-        if !is_private_item(&item_fn.vis, &item_fn.attrs) {
+        if !Self::is_private_item(&item_fn.vis, &item_fn.attrs) {
             return;
         }
         self.push_function(&item_fn.sig, &item_fn.block, true);
@@ -75,7 +75,7 @@ impl<'a> PrivateFunctionCollector<'a> {
     }
 
     fn process_impl_method(&mut self, method: &ImplItemFn, is_hidden: bool) {
-        if !is_private_item(&method.vis, &method.attrs) {
+        if !Self::is_private_item(&method.vis, &method.attrs) {
             return;
         }
         self.push_function(&method.sig, &method.block, is_hidden);
@@ -98,18 +98,22 @@ impl<'a> PrivateFunctionCollector<'a> {
             name: sig.ident.to_string(),
             line: sig.ident.span().start().line,
             complexity: scorer.score(block),
-            used_private_structs: collect_used_private_structs(sig, block, self.helper_structs),
+            used_private_structs: StructUsageCollector::collect_used_private_structs(
+                sig,
+                block,
+                self.helper_structs,
+            ),
             is_hidden,
         });
     }
-}
 
-// Only `pub` escapes. Every restricted form -- pub(crate), pub(super),
-// pub(in path), pub(self) -- is unreachable from outside the crate, so it is
-// hidden implementation exactly as a bare `fn` is. Restricting visibility is not
-// a way out of the measurement; publishing or relocating the behaviour is.
-fn is_private_item(vis: &Visibility, attrs: &[Attribute]) -> bool {
-    let checker = TestAttrChecker::new();
-    matches!(vis, Visibility::Inherited | Visibility::Restricted(_))
-        && !checker.has_test_attrs(attrs)
+    // Only `pub` escapes. Every restricted form -- pub(crate), pub(super),
+    // pub(in path), pub(self) -- is unreachable from outside the crate, so it is
+    // hidden implementation exactly as a bare `fn` is. Restricting visibility is not
+    // a way out of the measurement; publishing or relocating the behaviour is.
+    fn is_private_item(vis: &Visibility, attrs: &[Attribute]) -> bool {
+        let checker = TestAttrChecker::new();
+        matches!(vis, Visibility::Inherited | Visibility::Restricted(_))
+            && !checker.has_test_attrs(attrs)
+    }
 }
