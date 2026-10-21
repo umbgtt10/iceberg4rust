@@ -22,15 +22,6 @@ impl<'a> StructUsageCollector<'a> {
         }
     }
 
-    fn record_if_private_struct(&mut self, path: &Path) {
-        if let Some(segment) = path.segments.last() {
-            let ident = segment.ident.to_string();
-            if self.helper_structs.contains_key(&ident) {
-                self.found.insert(ident);
-            }
-        }
-    }
-
     pub fn collect_used_private_structs(
         signature: &Signature,
         block: &Block,
@@ -40,6 +31,15 @@ impl<'a> StructUsageCollector<'a> {
         collector.visit_signature(signature);
         collector.visit_block(block);
         collector.found
+    }
+
+    fn record_if_private_struct(&mut self, path: &Path) {
+        if let Some(segment) = path.segments.last() {
+            let ident = segment.ident.to_string();
+            if self.helper_structs.contains_key(&ident) {
+                self.found.insert(ident);
+            }
+        }
     }
 }
 

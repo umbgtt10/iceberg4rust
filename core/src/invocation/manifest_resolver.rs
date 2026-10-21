@@ -20,40 +20,11 @@ impl ManifestResolver {
         Self { config }
     }
 
-    pub fn resolve_packages(&self) -> Result<Vec<PackageContext>> {
-        let mut command = MetadataCommand::new();
-        command.no_deps();
-        if let Some(manifest_path) = &self.config.manifest_path {
-            command.manifest_path(manifest_path);
-        }
-
-        let metadata = command.exec().context("failed to read Cargo metadata")?;
-        let packages = Self::select_packages(&metadata, &self.config.packages)?;
-
-        packages
-            .into_iter()
-            .map(Self::build_package_context)
-            .collect()
-    }
-
-    fn build_package_context(package: &Package) -> Result<PackageContext> {
-        let manifest_dir = package
-            .manifest_path
-            .clone()
-            .into_std_path_buf()
-            .parent()
-            .map(PathBuf::from)
-            .context("package manifest has no parent directory")?;
-
-        let mut collector = SourceRootCollector::new();
-        collector.collect_from_targets(&package.targets);
-        collector.ensure_fallback(&manifest_dir);
-
-        Ok(PackageContext {
-            name: package.name.to_string(),
-            manifest_dir,
-            source_roots: collector.into_roots(),
-        })
+    pub fn is_production_relative_file(relative_file: &str) -> bool {
+        !relative_file.starts_with("tests/")
+            && !relative_file.starts_with("examples/")
+            && !relative_file.starts_with("benches/")
+            && relative_file != "build.rs"
     }
 
     pub fn is_production_target(target: &Target) -> bool {
@@ -76,6 +47,30 @@ impl ManifestResolver {
                 "lib" | "bin" | "proc-macro" | "rlib" | "dylib" | "cdylib" | "staticlib"
             )
         })
+    }
+
+    pub fn relative_file(base_dir: &Path, file_path: &Path) -> String {
+        file_path
+            .strip_prefix(base_dir)
+            .unwrap_or(file_path)
+            .to_string_lossy()
+            .replace('\\', "/")
+    }
+
+    pub fn resolve_packages(&self) -> Result<Vec<PackageContext>> {
+        let mut command = MetadataCommand::new();
+        command.no_deps();
+        if let Some(manifest_path) = &self.config.manifest_path {
+            command.manifest_path(manifest_path);
+        }
+
+        let metadata = command.exec().context("failed to read Cargo metadata")?;
+        let packages = Self::select_packages(&metadata, &self.config.packages)?;
+
+        packages
+            .into_iter()
+            .map(Self::build_package_context)
+            .collect()
     }
 
     pub fn select_packages<'a>(
@@ -104,18 +99,23 @@ impl ManifestResolver {
         bail!("manifest contains multiple packages; pass --package <name>")
     }
 
-    pub fn relative_file(base_dir: &Path, file_path: &Path) -> String {
-        file_path
-            .strip_prefix(base_dir)
-            .unwrap_or(file_path)
-            .to_string_lossy()
-            .replace('\\', "/")
-    }
+    fn build_package_context(package: &Package) -> Result<PackageContext> {
+        let manifest_dir = package
+            .manifest_path
+            .clone()
+            .into_std_path_buf()
+            .parent()
+            .map(PathBuf::from)
+            .context("package manifest has no parent directory")?;
 
-    pub fn is_production_relative_file(relative_file: &str) -> bool {
-        !relative_file.starts_with("tests/")
-            && !relative_file.starts_with("examples/")
-            && !relative_file.starts_with("benches/")
-            && relative_file != "build.rs"
+        let mut collector = SourceRootCollector::new();
+        collector.collect_from_targets(&package.targets);
+        collector.ensure_fallback(&manifest_dir);
+
+        Ok(PackageContext {
+            name: package.name.to_string(),
+            manifest_dir,
+            source_roots: collector.into_roots(),
+        })
     }
 }

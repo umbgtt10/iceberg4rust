@@ -16,6 +16,16 @@ impl ReportPrinter {
         Self { threshold, top }
     }
 
+    // The exit-code contract uses the same selection the table shows, so a
+    // consumer that only checks the exit code and one that reads the report
+    // can never disagree. `top` limits display only, never the verdict.
+    #[must_use]
+    pub fn has_offenders(&self, reports: &[FileRiskReport]) -> bool {
+        reports
+            .iter()
+            .any(|report| report.risk_score >= self.threshold)
+    }
+
     pub fn print(&self, reports: &[FileRiskReport]) {
         let visible = self.select_visible(reports);
 
@@ -92,16 +102,6 @@ impl ReportPrinter {
             self.top,
             reports.iter().map(|report| report.risk_score).sum::<f64>(),
         );
-    }
-
-    // The exit-code contract uses the same selection the table shows, so a
-    // consumer that only checks the exit code and one that reads the report
-    // can never disagree. `top` limits display only, never the verdict.
-    #[must_use]
-    pub fn has_offenders(&self, reports: &[FileRiskReport]) -> bool {
-        reports
-            .iter()
-            .any(|report| report.risk_score >= self.threshold)
     }
 
     // Ranking happens here rather than upstream because this is where `top`

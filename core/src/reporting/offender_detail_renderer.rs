@@ -26,27 +26,6 @@ impl OffenderDetailRenderer {
         out
     }
 
-    fn render_offender(offender: &FileRiskReport) -> String {
-        let mut out = String::new();
-        let _ = writeln!(
-            out,
-            "\n  {}  {}  (risk {:.2}, {} private fns, complexity {})",
-            offender.package_name,
-            offender.relative_file,
-            offender.risk_score,
-            offender.private_function_count,
-            offender.private_complexity_sum,
-        );
-        let _ = writeln!(out, "    {:>6}  {:>10}  function", "line", "complexity");
-
-        for function in Self::by_descending_complexity(&offender.functions) {
-            out.push_str(&Self::render_function(function));
-        }
-
-        out.push_str(&Self::render_structs(offender));
-        out
-    }
-
     fn by_descending_complexity(
         functions: &[PrivateFunctionReport],
     ) -> Vec<&PrivateFunctionReport> {
@@ -70,6 +49,27 @@ impl OffenderDetailRenderer {
             "    {:>6}  {:>10}  {}{}",
             function.line, function.complexity, function.name, marker,
         );
+        out
+    }
+
+    fn render_offender(offender: &FileRiskReport) -> String {
+        let mut out = String::new();
+        let _ = writeln!(
+            out,
+            "\n  {}  {}  (risk {:.2}, {} private fns, complexity {})",
+            offender.package_name,
+            offender.relative_file,
+            offender.risk_score,
+            offender.private_function_count,
+            offender.private_complexity_sum,
+        );
+        let _ = writeln!(out, "    {:>6}  {:>10}  function", "line", "complexity");
+
+        for function in Self::by_descending_complexity(&offender.functions) {
+            out.push_str(&Self::render_function(function));
+        }
+
+        out.push_str(&Self::render_structs(offender));
         out
     }
 

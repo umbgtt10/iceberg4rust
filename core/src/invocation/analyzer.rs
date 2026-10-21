@@ -25,6 +25,9 @@ use crate::reporting::risk_ordering::RiskOrdering;
 pub struct Analyzer;
 
 impl Analyzer {
+    const DATA_STRUCT_WEIGHT: f64 = 0.5;
+    const BEHAVIORAL_STRUCT_WEIGHT: f64 = 2.0;
+
     pub fn new() -> Self {
         Self
     }
@@ -36,53 +39,6 @@ impl Analyzer {
         }
         reports.sort_by(RiskOrdering::descending);
         Ok(reports)
-    }
-
-    fn analyze_source_root(
-        &self,
-        source_root: &Path,
-        package: &PackageContext,
-    ) -> Result<Vec<FileRiskReport>> {
-        if !source_root.exists() {
-            return Ok(Vec::new());
-        }
-
-        SourceFileWalker::walk(source_root)
-            .iter()
-            .filter_map(|file_path| self.analyze_source_file(file_path, package).transpose())
-            .collect()
-    }
-
-    fn analyze_source_file(
-        &self,
-        file_path: &Path,
-        package: &PackageContext,
-    ) -> Result<Option<FileRiskReport>> {
-        let relative = ManifestResolver::relative_file(&package.manifest_dir, file_path);
-        if !ManifestResolver::is_production_relative_file(&relative) {
-            return Ok(None);
-        }
-
-        let source = fs::read_to_string(file_path)
-            .with_context(|| format!("failed to read source file {}", file_path.display()))?;
-        let metrics = self.analyze_source(&source)?;
-        if metrics.risk_score <= f64::EPSILON {
-            return Ok(None);
-        }
-
-        Ok(Some(FileRiskReport {
-            package_name: package.name.clone(),
-            relative_file: relative,
-            effective_loc: metrics.effective_loc,
-            private_function_count: metrics.private_function_count,
-            private_complexity_sum: metrics.private_complexity_sum,
-            data_private_struct_count: metrics.data_private_struct_count,
-            behavioral_private_struct_count: metrics.behavioral_private_struct_count,
-            functions: metrics.functions,
-            data_structs: metrics.data_structs,
-            behavioral_structs: metrics.behavioral_structs,
-            risk_score: metrics.risk_score,
-        }))
     }
 
     pub fn analyze_source(&self, source: &str) -> Result<FileMetrics> {
@@ -148,24 +104,6 @@ impl Analyzer {
         })
     }
 
-    fn structs_of_kind(
-        used: &BTreeSet<String>,
-        helper_structs: &BTreeMap<String, HelperStructKind>,
-        kind: HelperStructKind,
-    ) -> Vec<String> {
-        used.iter()
-            .filter(|name| {
-                helper_structs
-                    .get(*name)
-                    .is_some_and(|found| *found == kind)
-            })
-            .cloned()
-            .collect()
-    }
-
-    const DATA_STRUCT_WEIGHT: f64 = 0.5;
-    const BEHAVIORAL_STRUCT_WEIGHT: f64 = 2.0;
-
     pub fn compute_file_risk(
         effective_loc: usize,
         private_function_count: usize,
@@ -187,6 +125,53 @@ impl Analyzer {
                 + Self::BEHAVIORAL_STRUCT_WEIGHT * (behavioral_private_struct_count as f64))
     }
 
+    fn analyze_source_file(
+        &self,
+        file_path: &Path,
+        package: &PackageContext,
+    ) -> Result<Option<FileRiskReport>> {
+        let relative = ManifestResolver::relative_file(&package.manifest_dir, file_path);
+        if !ManifestResolver::is_production_relative_file(&relative) {
+            return Ok(None);
+        }
+
+        let source = fs::read_to_string(file_path)
+            .with_context(|| format!("failed to read source file {}", file_path.display()))?;
+        let metrics = self.analyze_source(&source)?;
+        if metrics.risk_score <= f64::EPSILON {
+            return Ok(None);
+        }
+
+        Ok(Some(FileRiskReport {
+            package_name: package.name.clone(),
+            relative_file: relative,
+            effective_loc: metrics.effective_loc,
+            private_function_count: metrics.private_function_count,
+            private_complexity_sum: metrics.private_complexity_sum,
+            data_private_struct_count: metrics.data_private_struct_count,
+            behavioral_private_struct_count: metrics.behavioral_private_struct_count,
+            functions: metrics.functions,
+            data_structs: metrics.data_structs,
+            behavioral_structs: metrics.behavioral_structs,
+            risk_score: metrics.risk_score,
+        }))
+    }
+
+    fn analyze_source_root(
+        &self,
+        source_root: &Path,
+        package: &PackageContext,
+    ) -> Result<Vec<FileRiskReport>> {
+        if !source_root.exists() {
+            return Ok(Vec::new());
+        }
+
+        SourceFileWalker::walk(source_root)
+            .iter()
+            .filter_map(|file_path| self.analyze_source_file(file_path, package).transpose())
+            .collect()
+    }
+
     fn first_struct_name(syntax: &File) -> Option<String> {
         syntax.items.iter().find_map(|item| {
             if let Item::Struct(item_struct) = item {
@@ -195,5 +180,20 @@ impl Analyzer {
                 None
             }
         })
+    }
+
+    fn structs_of_kind(
+        used: &BTreeSet<String>,
+        helper_structs: &BTreeMap<String, HelperStructKind>,
+        kind: HelperStructKind,
+    ) -> Vec<String> {
+        used.iter()
+            .filter(|name| {
+                helper_structs
+                    .get(*name)
+                    .is_some_and(|found| *found == kind)
+            })
+            .cloned()
+            .collect()
     }
 }

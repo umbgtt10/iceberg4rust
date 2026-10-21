@@ -27,38 +27,6 @@ impl ComplexityScorer {
             .sum()
     }
 
-    fn score_stmt(&self, stmt: &Stmt, nesting: u32) -> u32 {
-        match stmt {
-            Stmt::Item(item) => self.score_item(item, nesting),
-            Stmt::Expr(expr, _) => self.score_expr(expr, nesting),
-            Stmt::Local(local) => local
-                .init
-                .as_ref()
-                .map_or(0, |init| self.score_expr(&init.expr, nesting)),
-            Stmt::Macro(_) => 0,
-        }
-    }
-
-    fn score_item(&self, item: &Item, nesting: u32) -> u32 {
-        match item {
-            Item::Fn(item_fn) => self.score_block(&item_fn.block, nesting),
-            Item::Mod(item_mod) => item_mod.content.as_ref().map_or(0, |(_, items)| {
-                items
-                    .iter()
-                    .map(|item| self.score_item(item, nesting))
-                    .sum()
-            }),
-            Item::Impl(ItemImpl { items, .. }) => items
-                .iter()
-                .map(|item| match item {
-                    ImplItem::Fn(method) => self.score_block(&method.block, nesting),
-                    _ => 0,
-                })
-                .sum(),
-            _ => 0,
-        }
-    }
-
     fn score_expr(&self, expr: &Expr, nesting: u32) -> u32 {
         match expr {
             Expr::If(ExprIf {
@@ -101,6 +69,38 @@ impl ComplexityScorer {
                         .sum::<u32>()
             }
             _ => 0,
+        }
+    }
+
+    fn score_item(&self, item: &Item, nesting: u32) -> u32 {
+        match item {
+            Item::Fn(item_fn) => self.score_block(&item_fn.block, nesting),
+            Item::Mod(item_mod) => item_mod.content.as_ref().map_or(0, |(_, items)| {
+                items
+                    .iter()
+                    .map(|item| self.score_item(item, nesting))
+                    .sum()
+            }),
+            Item::Impl(ItemImpl { items, .. }) => items
+                .iter()
+                .map(|item| match item {
+                    ImplItem::Fn(method) => self.score_block(&method.block, nesting),
+                    _ => 0,
+                })
+                .sum(),
+            _ => 0,
+        }
+    }
+
+    fn score_stmt(&self, stmt: &Stmt, nesting: u32) -> u32 {
+        match stmt {
+            Stmt::Item(item) => self.score_item(item, nesting),
+            Stmt::Expr(expr, _) => self.score_expr(expr, nesting),
+            Stmt::Local(local) => local
+                .init
+                .as_ref()
+                .map_or(0, |init| self.score_expr(&init.expr, nesting)),
+            Stmt::Macro(_) => 0,
         }
     }
 }

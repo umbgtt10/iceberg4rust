@@ -43,13 +43,16 @@ impl PrivateHelperClassifier {
         }
     }
 
-    fn try_insert_data_struct(&mut self, item_struct: &ItemStruct, primary_struct: Option<&str>) {
-        let name = item_struct.ident.to_string();
-        if matches!(item_struct.vis, Visibility::Inherited)
-            && primary_struct.is_none_or(|primary| primary != name)
-        {
-            self.helper_structs.insert(name, HelperStructKind::Data);
-        }
+    fn impl_target_name(item_impl: &ItemImpl) -> Option<String> {
+        let Type::Path(type_path) = item_impl.self_ty.as_ref() else {
+            return None;
+        };
+
+        type_path
+            .path
+            .segments
+            .last()
+            .map(|segment| segment.ident.to_string())
     }
 
     fn recurse_collect_structs(&mut self, item_mod: &ItemMod, primary_struct: Option<&str>) {
@@ -62,13 +65,22 @@ impl PrivateHelperClassifier {
         }
     }
 
-    fn upgrade_impls(&mut self, items: &[Item]) {
-        for item in items {
-            match item {
-                Item::Impl(item_impl) => self.try_upgrade_impl(item_impl),
-                Item::Mod(item_mod) => self.recurse_upgrade_impls(item_mod),
-                _ => {}
-            }
+    fn recurse_upgrade_impls(&mut self, item_mod: &ItemMod) {
+        if self.checker.has_test_attrs(&item_mod.attrs) {
+            return;
+        }
+
+        if let Some((_, inline_items)) = &item_mod.content {
+            self.upgrade_impls(inline_items);
+        }
+    }
+
+    fn try_insert_data_struct(&mut self, item_struct: &ItemStruct, primary_struct: Option<&str>) {
+        let name = item_struct.ident.to_string();
+        if matches!(item_struct.vis, Visibility::Inherited)
+            && primary_struct.is_none_or(|primary| primary != name)
+        {
+            self.helper_structs.insert(name, HelperStructKind::Data);
         }
     }
 
@@ -93,25 +105,13 @@ impl PrivateHelperClassifier {
         }
     }
 
-    fn recurse_upgrade_impls(&mut self, item_mod: &ItemMod) {
-        if self.checker.has_test_attrs(&item_mod.attrs) {
-            return;
+    fn upgrade_impls(&mut self, items: &[Item]) {
+        for item in items {
+            match item {
+                Item::Impl(item_impl) => self.try_upgrade_impl(item_impl),
+                Item::Mod(item_mod) => self.recurse_upgrade_impls(item_mod),
+                _ => {}
+            }
         }
-
-        if let Some((_, inline_items)) = &item_mod.content {
-            self.upgrade_impls(inline_items);
-        }
-    }
-
-    fn impl_target_name(item_impl: &ItemImpl) -> Option<String> {
-        let Type::Path(type_path) = item_impl.self_ty.as_ref() else {
-            return None;
-        };
-
-        type_path
-            .path
-            .segments
-            .last()
-            .map(|segment| segment.ident.to_string())
     }
 }

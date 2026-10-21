@@ -18,6 +18,20 @@ impl CommentStripper {
         }
     }
 
+    pub fn count_effective_loc(source: &str) -> usize {
+        let mut stripper = CommentStripper::new();
+        let mut count = 0;
+
+        for line in source.lines() {
+            let stripped = stripper.strip(line);
+            if !stripped.trim().is_empty() {
+                count += 1;
+            }
+        }
+
+        count
+    }
+
     pub fn strip(&mut self, line: &str) -> String {
         let mut result = String::new();
         let chars: Vec<char> = line.chars().collect();
@@ -46,18 +60,8 @@ impl CommentStripper {
         result
     }
 
-    pub fn count_effective_loc(source: &str) -> usize {
-        let mut stripper = CommentStripper::new();
-        let mut count = 0;
-
-        for line in source.lines() {
-            let stripped = stripper.strip(line);
-            if !stripped.trim().is_empty() {
-                count += 1;
-            }
-        }
-
-        count
+    fn pair_at(chars: &[char], index: usize, pair: [char; 2]) -> bool {
+        index + 1 < chars.len() && chars[index] == pair[0] && chars[index + 1] == pair[1]
     }
 
     fn skip_block_comment_end(&mut self, chars: &[char], index: usize) -> usize {
@@ -67,9 +71,5 @@ impl CommentStripper {
         } else {
             index + 1
         }
-    }
-
-    fn pair_at(chars: &[char], index: usize, pair: [char; 2]) -> bool {
-        index + 1 < chars.len() && chars[index] == pair[0] && chars[index + 1] == pair[1]
     }
 }
