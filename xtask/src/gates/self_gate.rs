@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use crate::gates::gate::Gate;
+use crate::gates::gate_failure::GateFailure;
 use crate::process::command_runner::CommandRunner;
 
 const OFFENDERS_FOUND: i32 = 2;
@@ -38,7 +39,7 @@ impl Gate for SelfGate<'_> {
         String::from("File risk (self-analysis)")
     }
 
-    fn run(&self) -> Result<(), String> {
+    fn run(&self) -> Result<(), GateFailure> {
         let mut args = vec![
             String::from("run"),
             String::from("--quiet"),
@@ -62,11 +63,11 @@ impl Gate for SelfGate<'_> {
         // failure to run at all.
         match self.runner.run_streaming("cargo", &args)? {
             Some(0) => Ok(()),
-            Some(OFFENDERS_FOUND) => Err(format!(
+            Some(OFFENDERS_FOUND) => Err(GateFailure::Found(format!(
                 "a file is at or above the ceiling of {}",
                 self.threshold
-            )),
-            code => Err(format!("exit code {code:?}")),
+            ))),
+            code => Err(GateFailure::Exited(code)),
         }
     }
 }
