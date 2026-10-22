@@ -4,20 +4,14 @@
 
 use iceberg4rust::invocation::analyzer::Analyzer;
 use iceberg4rust::invocation::package_context::PackageContext;
-use std::env::temp_dir;
-use std::fs::{create_dir_all, remove_dir_all, write};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::fs::{create_dir_all, write};
+use tempfile::TempDir;
 
 #[test]
 fn analyze_package_over_a_source_root_returns_a_report_per_file() {
     // Arrange
-    let root = temp_dir().join(format!(
-        "iceberg4rust_analyze_package_{}",
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("clock")
-            .as_nanos()
-    ));
+    let dir = TempDir::new().expect("temp dir");
+    let root = dir.path().to_path_buf();
     let src = root.join("src");
     create_dir_all(&src).expect("create src");
     let hides_private_work = r#"
@@ -52,19 +46,13 @@ impl Worker {
 
     // Assert
     assert_eq!(reports.len(), 2);
-    remove_dir_all(&root).ok();
 }
 
 #[test]
 fn analyze_package_over_a_source_root_that_holds_nothing_returns_no_reports() {
     // Arrange
-    let root = temp_dir().join(format!(
-        "iceberg4rust_analyze_package_empty_{}",
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("clock")
-            .as_nanos()
-    ));
+    let dir = TempDir::new().expect("temp dir");
+    let root = dir.path().to_path_buf();
     let src = root.join("src");
     create_dir_all(&src).expect("create src");
     let package = PackageContext {
@@ -79,7 +67,6 @@ fn analyze_package_over_a_source_root_that_holds_nothing_returns_no_reports() {
 
     // Assert
     assert!(reports.is_empty());
-    remove_dir_all(&root).ok();
 }
 
 // A type whose whole implementation is pub(crate) is untestable from outside the
