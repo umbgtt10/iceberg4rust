@@ -4,9 +4,9 @@
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CommandOutcome {
-    pub exit_code: Option<i32>,
-    pub stdout: String,
-    pub stderr: String,
+    exit_code: Option<i32>,
+    stdout: String,
+    stderr: String,
 }
 
 impl CommandOutcome {
@@ -16,5 +16,17 @@ impl CommandOutcome {
             stdout,
             stderr,
         }
+    }
+
+    pub fn exit_code(&self) -> Option<i32> {
+        self.exit_code
+    }
+
+    pub fn stderr(&self) -> &str {
+        &self.stderr
+    }
+
+    pub fn stdout(&self) -> &str {
+        &self.stdout
     }
 }
