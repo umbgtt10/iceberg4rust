@@ -50,6 +50,7 @@ jobs:
           cargo install --locked cargo-dry4rust
           cargo install cargo-crap4rust
           cargo install cargo-twin4rust
+          cargo install --locked cargo-shear --version 1.14.0
           cargo install cargo-llvm-cov
 
       - name: Run ${{ matrix.stage }}

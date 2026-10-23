@@ -65,12 +65,13 @@ Run gates:
 If either gate is not green, the work is not complete.
 
 Stage 1 is formatting, clippy and tests -- cargo built-ins only, so it works on
-a fresh checkout. Stage 2 is `cargo xtask stage2`, which orchestrates five
+a fresh checkout. Stage 2 is `cargo xtask stage2`, which orchestrates six
 gates in this order:
 
 | gate | asks |
 |---|---|
 | `cargo stern4rust` | do the house coding rules hold |
+| `cargo shear` | is every declared dependency used, in the section that uses it |
 | `cargo dry4rust` | did this change add duplicated code |
 | `cargo crap4rust` | is any function complex and untested |
 | `cargo twin4rust` | does every source file have a mirrored test file |
@@ -90,7 +91,20 @@ the config rather than the gate script, so a hand-run of `cargo stern4rust`
 checks exactly what the gate checks. `spdx-matches-manifest` reads `license`
 from each member's manifest, inherited from `[workspace.package]`.
 
-dry4rust runs **second** for the same reason stern4rust is first: removing a
+cargo-shear runs **second**: its corrections edit manifests only -- a
+dependency removed, or moved to the section that uses it -- so they change
+nothing the gates behind it measure, and it takes a second. It runs `--locked`,
+reading the lock file and never writing it, and `--deny-warnings`, so an
+optional dependency no feature's code uses fails as an unused one does. A
+dependency it cannot see used -- linked only for what it provides, declared
+only to switch on a feature, used only by generated code -- goes in
+`[package.metadata.cargo-shear] ignored`, or the workspace's, and the gate
+refuses an entry without its reason in the same table's `reasons`. The one
+today is `proc-macro2`, declared for its `span-locations` feature: core reads
+line numbers from syn's spans, and only that feature gives a span its line.
+Pinned at 1.14.0, as CI installs it.
+
+dry4rust runs **third** for the same reason stern4rust is first: removing a
 duplicate moves code between files, which changes what the three behind it
 measure. It scans `core/src` only -- tests repeat their arrangement by design --
 and checks with zero ceilings against `dry4rust-baseline.json`, the duplication
@@ -116,6 +130,7 @@ recorded at: `cargo dry4rust --path core/src --min-nodes 25 --baseline "$PWD/dry
 `cargo install cargo-dry4rust`
 `cargo install cargo-crap4rust`
 `cargo install cargo-twin4rust`
+`cargo install --locked cargo-shear --version 1.14.0`
 `cargo install cargo-llvm-cov`
 `rustup component add llvm-tools`
 

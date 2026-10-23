@@ -11,6 +11,7 @@ use xtask::gates::crap_gate::CrapGate;
 use xtask::gates::dry_gate::DryGate;
 use xtask::gates::gate::Gate;
 use xtask::gates::self_gate::SelfGate;
+use xtask::gates::shear_gate::ShearGate;
 use xtask::gates::stage2::Stage2;
 use xtask::gates::stern_gate::SternGate;
 use xtask::gates::twin_gate::TwinGate;
@@ -46,7 +47,12 @@ fn run_stage2() -> ExitCode {
 
     let stern = SternGate::new(&runner, manifest_path.clone(), packages.clone());
 
-    // Second, for the same reason stern4rust is first: removing a duplicate
+    // Second: every declared dependency used, in the section that uses it. Its
+    // corrections edit manifests only, so they move nothing the gates behind it
+    // measure, and it costs a second.
+    let shear = ShearGate::new(&runner, manifest_path.clone());
+
+    // Third, for the same reason stern4rust is first: removing a duplicate
     // moves code between files, which changes what the three behind it measure.
     // The published crate's source only -- tests repeat their arrangement by
     // design -- with zero ceilings against a baseline of what was already
@@ -75,7 +81,7 @@ fn run_stage2() -> ExitCode {
         String::from(SELF_GATE_THRESHOLD),
     );
 
-    let gates: Vec<&dyn Gate> = vec![&stern, &dry, &crap, &twin, &self_gate];
+    let gates: Vec<&dyn Gate> = vec![&stern, &shear, &dry, &crap, &twin, &self_gate];
 
     match Stage2::new(gates).run() {
         Ok(()) => {

@@ -183,7 +183,8 @@ just stage2
 
 Stage 1 is formatting, clippy and tests — cargo built-ins only, so it works on
 a fresh checkout. Stage 2 runs `cargo xtask stage2`, which runs, in this
-order: `cargo stern4rust` (house coding rules, all of them), `cargo dry4rust`
+order: `cargo stern4rust` (house coding rules, all of them), `cargo shear`
+(every declared dependency used), `cargo dry4rust`
 (no duplicated code in `core/src` beyond `dry4rust-baseline.json`),
 `cargo crap4rust` (complexity vs. coverage), `cargo twin4rust` (every source
 file has a mirrored test file), and `cargo-iceberg4rust` against itself — a
@@ -198,6 +199,7 @@ Required tools, none of which come with `cargo` itself:
 | `cargo-dry4rust` | `cargo install cargo-dry4rust` |
 | `cargo-crap4rust` | `cargo install cargo-crap4rust` |
 | `cargo-twin4rust` | `cargo install cargo-twin4rust` |
+| [`cargo-shear`](https://github.com/Boshen/cargo-shear) | `cargo install --locked cargo-shear --version 1.14.0` |
 | [`cargo-llvm-cov`](https://github.com/taiki-e/cargo-llvm-cov) | `cargo install cargo-llvm-cov` |
 | `llvm-tools` rustup component | `rustup component add llvm-tools` |
 
