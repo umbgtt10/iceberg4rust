@@ -34,7 +34,7 @@ impl Analyzer {
 
     pub fn analyze_package(&self, package: &PackageContext) -> Result<Vec<FileRiskReport>> {
         let mut reports = Vec::new();
-        for source_root in &package.source_roots {
+        for source_root in package.source_roots() {
             reports.extend(self.analyze_source_root(source_root, package)?);
         }
         reports.sort_by(RiskOrdering::descending);
@@ -53,12 +53,12 @@ impl Analyzer {
 
         let private_function_count = private_functions
             .iter()
-            .filter(|function| function.is_hidden)
+            .filter(|function| function.is_hidden())
             .count();
-        let private_complexity_sum: u32 = private_functions.iter().map(|f| f.complexity).sum();
+        let private_complexity_sum: u32 = private_functions.iter().map(|f| f.complexity()).sum();
         let used_private_structs: BTreeSet<String> = private_functions
             .iter()
-            .flat_map(|f| f.used_private_structs.iter().cloned())
+            .flat_map(|f| f.used_private_structs().iter().cloned())
             .collect();
 
         let data_structs = Self::structs_of_kind(
@@ -76,11 +76,13 @@ impl Analyzer {
 
         let functions = private_functions
             .iter()
-            .map(|function| PrivateFunctionReport {
-                name: function.name.clone(),
-                line: function.line,
-                complexity: function.complexity,
-                is_hidden: function.is_hidden,
+            .map(|function| {
+                PrivateFunctionReport::new(
+                    function.name().to_string(),
+                    function.line(),
+                    function.complexity(),
+                    function.is_hidden(),
+                )
             })
             .collect();
         let risk_score = Self::compute_file_risk(
@@ -91,17 +93,16 @@ impl Analyzer {
             behavioral_private_struct_count,
         );
 
-        Ok(FileMetrics {
-            functions,
-            data_structs,
-            behavioral_structs,
-            effective_loc,
-            private_function_count,
-            private_complexity_sum,
-            data_private_struct_count,
-            behavioral_private_struct_count,
-            risk_score,
-        })
+        Ok(FileMetrics::default()
+            .with_functions(functions)
+            .with_data_structs(data_structs)
+            .with_behavioral_structs(behavioral_structs)
+            .with_effective_loc(effective_loc)
+            .with_private_function_count(private_function_count)
+            .with_private_complexity_sum(private_complexity_sum)
+            .with_data_private_struct_count(data_private_struct_count)
+            .with_behavioral_private_struct_count(behavioral_private_struct_count)
+            .with_risk_score(risk_score))
     }
 
     pub fn compute_file_risk(
@@ -130,7 +131,7 @@ impl Analyzer {
         file_path: &Path,
         package: &PackageContext,
     ) -> Result<Option<FileRiskReport>> {
-        let relative = ManifestResolver::relative_file(&package.manifest_dir, file_path);
+        let relative = ManifestResolver::relative_file(package.manifest_dir(), file_path);
         if !ManifestResolver::is_production_relative_file(&relative) {
             return Ok(None);
         }
@@ -138,23 +139,15 @@ impl Analyzer {
         let source = fs::read_to_string(file_path)
             .with_context(|| format!("failed to read source file {}", file_path.display()))?;
         let metrics = self.analyze_source(&source)?;
-        if metrics.risk_score <= f64::EPSILON {
+        if metrics.risk_score() <= f64::EPSILON {
             return Ok(None);
         }
 
-        Ok(Some(FileRiskReport {
-            package_name: package.name.clone(),
-            relative_file: relative,
-            effective_loc: metrics.effective_loc,
-            private_function_count: metrics.private_function_count,
-            private_complexity_sum: metrics.private_complexity_sum,
-            data_private_struct_count: metrics.data_private_struct_count,
-            behavioral_private_struct_count: metrics.behavioral_private_struct_count,
-            functions: metrics.functions,
-            data_structs: metrics.data_structs,
-            behavioral_structs: metrics.behavioral_structs,
-            risk_score: metrics.risk_score,
-        }))
+        Ok(Some(FileRiskReport::new(
+            package.name().to_string(),
+            relative,
+            metrics,
+        )))
     }
 
     fn analyze_source_root(

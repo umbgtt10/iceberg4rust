@@ -2,24 +2,21 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use iceberg4rust::reporting::file_metrics::FileMetrics;
 use iceberg4rust::reporting::file_risk_report::FileRiskReport;
 use iceberg4rust::reporting::risk_ordering::RiskOrdering;
 use std::cmp::Ordering;
 
 fn report(file: &str, risk: f64) -> FileRiskReport {
-    FileRiskReport {
-        functions: Vec::new(),
-        data_structs: Vec::new(),
-        behavioral_structs: Vec::new(),
-        package_name: "pkg".to_string(),
-        relative_file: file.to_string(),
-        effective_loc: 100,
-        private_function_count: 4,
-        private_complexity_sum: 6,
-        data_private_struct_count: 0,
-        behavioral_private_struct_count: 0,
-        risk_score: risk,
-    }
+    FileRiskReport::new(
+        "pkg".to_string(),
+        file.to_string(),
+        FileMetrics::default()
+            .with_effective_loc(100)
+            .with_private_function_count(4)
+            .with_private_complexity_sum(6)
+            .with_risk_score(risk),
+    )
 }
 
 #[test]
@@ -37,7 +34,7 @@ fn descending_sorts_a_slice_from_the_highest_score_down() {
     // Assert
     let order: Vec<&str> = reports
         .iter()
-        .map(|report| report.relative_file.as_str())
+        .map(|report| report.relative_file())
         .collect();
     assert_eq!(order, vec!["src/high.rs", "src/mid.rs", "src/low.rs"]);
 }

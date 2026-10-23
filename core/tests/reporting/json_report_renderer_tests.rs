@@ -2,6 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use iceberg4rust::reporting::file_metrics::FileMetrics;
 use iceberg4rust::reporting::file_risk_report::FileRiskReport;
 use iceberg4rust::reporting::json_report_renderer::JsonReportRenderer;
 use serde_json::Value;
@@ -15,19 +16,17 @@ fn rendered(reports: &[FileRiskReport], threshold: f64) -> Value {
 }
 
 fn report(package: &str, file: &str, risk: f64) -> FileRiskReport {
-    FileRiskReport {
-        functions: Vec::new(),
-        data_structs: Vec::new(),
-        behavioral_structs: Vec::new(),
-        package_name: package.to_string(),
-        relative_file: file.to_string(),
-        effective_loc: 223,
-        private_function_count: 63,
-        private_complexity_sum: 12,
-        data_private_struct_count: 1,
-        behavioral_private_struct_count: 2,
-        risk_score: risk,
-    }
+    FileRiskReport::new(
+        package.to_string(),
+        file.to_string(),
+        FileMetrics::default()
+            .with_effective_loc(223)
+            .with_private_function_count(63)
+            .with_private_complexity_sum(12)
+            .with_data_private_struct_count(1)
+            .with_behavioral_private_struct_count(2)
+            .with_risk_score(risk),
+    )
 }
 
 #[test]

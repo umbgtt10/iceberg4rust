@@ -31,8 +31,8 @@ impl Worker {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert_eq!(functions[0].name, "step");
-    assert_eq!(functions[0].line, 5);
+    assert_eq!(functions[0].name(), "step");
+    assert_eq!(functions[0].line(), 5);
 }
 
 #[test]
@@ -45,8 +45,8 @@ fn collect_captures_the_name_and_line_of_a_free_function() {
     let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
 
     // Assert
-    assert_eq!(functions[0].name, "helper");
-    assert_eq!(functions[0].line, 3);
+    assert_eq!(functions[0].name(), "helper");
+    assert_eq!(functions[0].line(), 3);
 }
 
 #[test]
@@ -88,7 +88,7 @@ pub fn open() -> u32 { 5 }
     let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
 
     // Assert
-    let names: Vec<&str> = functions.iter().map(|f| f.name.as_str()).collect();
+    let names: Vec<&str> = functions.iter().map(|f| f.name()).collect();
     assert_eq!(names, vec!["plain", "crate_wide", "only_here", "scoped"]);
 }
 
@@ -124,7 +124,7 @@ fn configure() -> Config {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert!(functions[0].used_private_structs.contains("Config"));
+    assert!(functions[0].used_private_structs().contains("Config"));
 }
 
 #[test]
@@ -143,8 +143,8 @@ fn second() {}
     let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
 
     // Assert
-    assert_eq!(functions[0].line, 2);
-    assert_eq!(functions[1].line, 4);
+    assert_eq!(functions[0].line(), 2);
+    assert_eq!(functions[1].line(), 4);
 }
 
 #[test]
@@ -166,7 +166,7 @@ impl Worker {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert!(functions[0].is_hidden);
+    assert!(functions[0].is_hidden());
 }
 
 #[test]
@@ -192,8 +192,8 @@ impl Watching for Worker {
 
     // Assert
     assert_eq!(functions.len(), 2);
-    assert_eq!(functions.iter().filter(|f| f.is_hidden).count(), 1);
-    assert_eq!(functions.iter().filter(|f| !f.is_hidden).count(), 1);
+    assert_eq!(functions.iter().filter(|f| f.is_hidden()).count(), 1);
+    assert_eq!(functions.iter().filter(|f| !f.is_hidden()).count(), 1);
 }
 
 #[test]
@@ -230,7 +230,7 @@ fn collect_private_free_function_is_hidden() {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert!(functions[0].is_hidden);
+    assert!(functions[0].is_hidden());
 }
 
 #[test]
@@ -296,7 +296,7 @@ fn collect_pub_crate_free_function_carries_its_complexity() {
     let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
 
     // Assert
-    assert_eq!(functions[0].complexity, 1);
+    assert_eq!(functions[0].complexity(), 1);
 }
 
 // Restricted visibility is not reachable from another crate, and this project's
@@ -335,7 +335,7 @@ impl Worker {
     let functions = PrivateFunctionCollector::new(&helper_structs).collect(&items);
 
     // Assert
-    assert!(functions[0].is_hidden);
+    assert!(functions[0].is_hidden());
 }
 
 #[test]
@@ -480,7 +480,7 @@ impl Watching for Observer {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert!(!functions[0].is_hidden);
+    assert!(!functions[0].is_hidden());
 }
 
 #[test]
@@ -506,6 +506,6 @@ impl Watching for Observer {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert!(!functions[0].is_hidden);
-    assert!(functions[0].complexity > 0);
+    assert!(!functions[0].is_hidden());
+    assert!(functions[0].complexity() > 0);
 }

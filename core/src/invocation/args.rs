@@ -2,6 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use std::path::Path;
 use std::path::PathBuf;
 
 use clap::Parser;
@@ -13,22 +14,42 @@ use clap::Parser;
 #[command(about = "Measure how much private implementation a Rust source file hides")]
 pub struct Args {
     #[arg(long)]
-    pub manifest_path: Option<PathBuf>,
+    manifest_path: Option<PathBuf>,
 
     #[arg(long = "package")]
-    pub packages: Vec<String>,
+    packages: Vec<String>,
 
     #[arg(long, default_value_t = 20.0)]
-    pub threshold: f64,
+    threshold: f64,
 
     #[arg(long, default_value_t = 20)]
-    pub top: usize,
+    top: usize,
 
     #[arg(long)]
-    pub json: bool,
+    json: bool,
 }
 
 impl Args {
+    pub fn json(&self) -> bool {
+        self.json
+    }
+
+    pub fn manifest_path(&self) -> Option<&Path> {
+        self.manifest_path.as_deref()
+    }
+
+    pub fn packages(&self) -> &[String] {
+        &self.packages
+    }
+
+    pub fn threshold(&self) -> f64 {
+        self.threshold
+    }
+
+    pub fn top(&self) -> usize {
+        self.top
+    }
+
     // Cargo invokes `cargo iceberg4rust ...` as `cargo-iceberg4rust iceberg4rust
     // ...`, inserting the subcommand name at argv[1]. Dropping it lets the same
     // binary be run directly and through cargo with identical arguments.

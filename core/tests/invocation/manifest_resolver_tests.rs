@@ -210,12 +210,12 @@ fn relative_file_same_path_returns_empty_string_or_dot() {
 #[test]
 fn resolve_packages_against_this_package_returns_it_with_its_source_root() {
     // Arrange
-    let config = Config {
-        manifest_path: Some(PathBuf::from("Cargo.toml")),
-        packages: vec![String::from("cargo-iceberg4rust")],
-        threshold: 15.0,
-        top: 10,
-    };
+    let config = Config::new(
+        Some(PathBuf::from("Cargo.toml")),
+        vec![String::from("cargo-iceberg4rust")],
+        15.0,
+        10,
+    );
     let resolver = ManifestResolver::new(config);
 
     // Act
@@ -223,8 +223,8 @@ fn resolve_packages_against_this_package_returns_it_with_its_source_root() {
 
     // Assert
     assert_eq!(packages.len(), 1);
-    assert_eq!(packages[0].name, "cargo-iceberg4rust");
-    assert!(!packages[0].source_roots.is_empty());
+    assert_eq!(packages[0].name(), "cargo-iceberg4rust");
+    assert!(!packages[0].source_roots().is_empty());
 }
 
 #[test]

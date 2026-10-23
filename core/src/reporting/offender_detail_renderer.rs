@@ -32,9 +32,9 @@ impl OffenderDetailRenderer {
         let mut ordered: Vec<&PrivateFunctionReport> = functions.iter().collect();
         ordered.sort_by(|left, right| {
             right
-                .complexity
-                .cmp(&left.complexity)
-                .then_with(|| left.line.cmp(&right.line))
+                .complexity()
+                .cmp(&left.complexity())
+                .then_with(|| left.line().cmp(&right.line()))
         });
         ordered
     }
@@ -42,12 +42,19 @@ impl OffenderDetailRenderer {
     fn render_function(function: &PrivateFunctionReport) -> String {
         // A trait method is flagged because it does not count toward the private
         // surface, so a reader is not left wondering why the tally disagrees.
-        let marker = if function.is_hidden { "" } else { "  (trait)" };
+        let marker = if function.is_hidden() {
+            ""
+        } else {
+            "  (trait)"
+        };
         let mut out = String::new();
         let _ = writeln!(
             out,
             "    {:>6}  {:>10}  {}{}",
-            function.line, function.complexity, function.name, marker,
+            function.line(),
+            function.complexity(),
+            function.name(),
+            marker,
         );
         out
     }
@@ -57,15 +64,15 @@ impl OffenderDetailRenderer {
         let _ = writeln!(
             out,
             "\n  {}  {}  (risk {:.2}, {} private fns, complexity {})",
-            offender.package_name,
-            offender.relative_file,
-            offender.risk_score,
-            offender.private_function_count,
-            offender.private_complexity_sum,
+            offender.package_name(),
+            offender.relative_file(),
+            offender.risk_score(),
+            offender.private_function_count(),
+            offender.private_complexity_sum(),
         );
         let _ = writeln!(out, "    {:>6}  {:>10}  function", "line", "complexity");
 
-        for function in Self::by_descending_complexity(&offender.functions) {
+        for function in Self::by_descending_complexity(offender.functions()) {
             out.push_str(&Self::render_function(function));
         }
 
@@ -75,14 +82,14 @@ impl OffenderDetailRenderer {
 
     fn render_structs(offender: &FileRiskReport) -> String {
         let mut out = String::new();
-        if offender.data_structs.is_empty() && offender.behavioral_structs.is_empty() {
+        if offender.data_structs().is_empty() && offender.behavioral_structs().is_empty() {
             return out;
         }
         let _ = writeln!(
             out,
             "    helper structs: data=[{}]  behavioral=[{}]",
-            offender.data_structs.join(", "),
-            offender.behavioral_structs.join(", "),
+            offender.data_structs().join(", "),
+            offender.behavioral_structs().join(", "),
         );
         out
     }

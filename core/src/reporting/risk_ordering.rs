@@ -15,9 +15,9 @@ impl RiskOrdering {
     #[must_use]
     pub fn descending(left: &FileRiskReport, right: &FileRiskReport) -> Ordering {
         right
-            .risk_score
-            .partial_cmp(&left.risk_score)
+            .risk_score()
+            .partial_cmp(&left.risk_score())
             .unwrap_or(Ordering::Equal)
-            .then_with(|| left.relative_file.cmp(&right.relative_file))
+            .then_with(|| left.relative_file().cmp(right.relative_file()))
     }
 }

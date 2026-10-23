@@ -6,17 +6,81 @@ use crate::reporting::private_function_report::PrivateFunctionReport;
 
 use serde::Serialize;
 
+use crate::reporting::file_metrics::FileMetrics;
+
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct FileRiskReport {
-    pub functions: Vec<PrivateFunctionReport>,
-    pub data_structs: Vec<String>,
-    pub behavioral_structs: Vec<String>,
-    pub package_name: String,
-    pub relative_file: String,
-    pub effective_loc: usize,
-    pub private_function_count: usize,
-    pub private_complexity_sum: u32,
-    pub data_private_struct_count: usize,
-    pub behavioral_private_struct_count: usize,
-    pub risk_score: f64,
+    functions: Vec<PrivateFunctionReport>,
+    data_structs: Vec<String>,
+    behavioral_structs: Vec<String>,
+    package_name: String,
+    relative_file: String,
+    effective_loc: usize,
+    private_function_count: usize,
+    private_complexity_sum: u32,
+    data_private_struct_count: usize,
+    behavioral_private_struct_count: usize,
+    risk_score: f64,
+}
+
+impl FileRiskReport {
+    pub fn new(package_name: String, relative_file: String, metrics: FileMetrics) -> Self {
+        Self {
+            functions: metrics.functions().to_vec(),
+            data_structs: metrics.data_structs().to_vec(),
+            behavioral_structs: metrics.behavioral_structs().to_vec(),
+            package_name,
+            relative_file,
+            effective_loc: metrics.effective_loc(),
+            private_function_count: metrics.private_function_count(),
+            private_complexity_sum: metrics.private_complexity_sum(),
+            data_private_struct_count: metrics.data_private_struct_count(),
+            behavioral_private_struct_count: metrics.behavioral_private_struct_count(),
+            risk_score: metrics.risk_score(),
+        }
+    }
+
+    pub fn behavioral_private_struct_count(&self) -> usize {
+        self.behavioral_private_struct_count
+    }
+
+    pub fn behavioral_structs(&self) -> &[String] {
+        &self.behavioral_structs
+    }
+
+    pub fn data_private_struct_count(&self) -> usize {
+        self.data_private_struct_count
+    }
+
+    pub fn data_structs(&self) -> &[String] {
+        &self.data_structs
+    }
+
+    pub fn effective_loc(&self) -> usize {
+        self.effective_loc
+    }
+
+    pub fn functions(&self) -> &[PrivateFunctionReport] {
+        &self.functions
+    }
+
+    pub fn package_name(&self) -> &str {
+        &self.package_name
+    }
+
+    pub fn private_complexity_sum(&self) -> u32 {
+        self.private_complexity_sum
+    }
+
+    pub fn private_function_count(&self) -> usize {
+        self.private_function_count
+    }
+
+    pub fn relative_file(&self) -> &str {
+        &self.relative_file
+    }
+
+    pub fn risk_score(&self) -> f64 {
+        self.risk_score
+    }
 }

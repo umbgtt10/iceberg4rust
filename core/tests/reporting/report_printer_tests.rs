@@ -2,41 +2,38 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use iceberg4rust::reporting::file_metrics::FileMetrics;
 use iceberg4rust::reporting::file_risk_report::FileRiskReport;
 use iceberg4rust::reporting::report_printer::ReportPrinter;
 use std::panic::AssertUnwindSafe;
 use std::panic::catch_unwind;
 
 fn report(file: &str, risk: f64) -> FileRiskReport {
-    FileRiskReport {
-        functions: Vec::new(),
-        data_structs: Vec::new(),
-        behavioral_structs: Vec::new(),
-        package_name: "node".to_string(),
-        relative_file: file.to_string(),
-        effective_loc: 100,
-        private_function_count: 5,
-        private_complexity_sum: 7,
-        data_private_struct_count: 1,
-        behavioral_private_struct_count: 2,
-        risk_score: risk,
-    }
+    FileRiskReport::new(
+        "node".to_string(),
+        file.to_string(),
+        FileMetrics::default()
+            .with_effective_loc(100)
+            .with_private_function_count(5)
+            .with_private_complexity_sum(7)
+            .with_data_private_struct_count(1)
+            .with_behavioral_private_struct_count(2)
+            .with_risk_score(risk),
+    )
 }
 
 fn report_in(package: &str, file: &str, risk: f64) -> FileRiskReport {
-    FileRiskReport {
-        functions: Vec::new(),
-        data_structs: Vec::new(),
-        behavioral_structs: Vec::new(),
-        package_name: package.to_string(),
-        relative_file: file.to_string(),
-        effective_loc: 100,
-        private_function_count: 5,
-        private_complexity_sum: 7,
-        data_private_struct_count: 1,
-        behavioral_private_struct_count: 2,
-        risk_score: risk,
-    }
+    FileRiskReport::new(
+        package.to_string(),
+        file.to_string(),
+        FileMetrics::default()
+            .with_effective_loc(100)
+            .with_private_function_count(5)
+            .with_private_complexity_sum(7)
+            .with_data_private_struct_count(1)
+            .with_behavioral_private_struct_count(2)
+            .with_risk_score(risk),
+    )
 }
 
 #[test]
@@ -120,19 +117,16 @@ fn print_report_no_visible_files_does_not_panic() {
 #[test]
 fn print_report_with_reports_does_not_panic() {
     // Arrange
-    let reports = vec![FileRiskReport {
-        functions: Vec::new(),
-        data_structs: Vec::new(),
-        behavioral_structs: Vec::new(),
-        package_name: "pkg".to_string(),
-        relative_file: "src/lib.rs".to_string(),
-        effective_loc: 50,
-        private_function_count: 3,
-        private_complexity_sum: 8,
-        data_private_struct_count: 1,
-        behavioral_private_struct_count: 0,
-        risk_score: 15.5,
-    }];
+    let reports = vec![FileRiskReport::new(
+        "pkg".to_string(),
+        "src/lib.rs".to_string(),
+        FileMetrics::default()
+            .with_effective_loc(50)
+            .with_private_function_count(3)
+            .with_private_complexity_sum(8)
+            .with_data_private_struct_count(1)
+            .with_risk_score(15.5),
+    )];
     let printer = ReportPrinter::new(10.0, 10);
 
     // Act & Assert
@@ -161,7 +155,7 @@ fn select_visible_applies_top_to_the_highest_risk_files_across_packages() {
     // Assert
     let order: Vec<&str> = visible
         .iter()
-        .map(|report| report.relative_file.as_str())
+        .map(|report| report.relative_file())
         .collect();
     assert_eq!(order, vec!["src/slot_analyzer.rs", "src/state_root.rs"]);
 }
@@ -181,7 +175,7 @@ fn select_visible_breaks_equal_risk_ties_by_file_path() {
     // Assert
     let order: Vec<&str> = visible
         .iter()
-        .map(|report| report.relative_file.as_str())
+        .map(|report| report.relative_file())
         .collect();
     assert_eq!(order, vec!["src/a.rs", "src/z.rs"]);
 }
@@ -205,7 +199,7 @@ fn select_visible_orders_reports_from_every_package_by_risk_descending() {
     // Assert
     let order: Vec<&str> = visible
         .iter()
-        .map(|report| report.relative_file.as_str())
+        .map(|report| report.relative_file())
         .collect();
     assert_eq!(
         order,
@@ -234,32 +228,25 @@ fn select_visible_reports_empty_input_returns_empty() {
 fn select_visible_reports_threshold_filters_lower_scores() {
     // Arrange
     let reports = vec![
-        FileRiskReport {
-            functions: Vec::new(),
-            data_structs: Vec::new(),
-            behavioral_structs: Vec::new(),
-            package_name: "demo-node".to_string(),
-            relative_file: "src/a.rs".to_string(),
-            effective_loc: 10,
-            private_function_count: 1,
-            private_complexity_sum: 2,
-            data_private_struct_count: 0,
-            behavioral_private_struct_count: 0,
-            risk_score: 12.0,
-        },
-        FileRiskReport {
-            functions: Vec::new(),
-            data_structs: Vec::new(),
-            behavioral_structs: Vec::new(),
-            package_name: "demo-node".to_string(),
-            relative_file: "src/b.rs".to_string(),
-            effective_loc: 20,
-            private_function_count: 2,
-            private_complexity_sum: 4,
-            data_private_struct_count: 1,
-            behavioral_private_struct_count: 0,
-            risk_score: 8.0,
-        },
+        FileRiskReport::new(
+            "demo-node".to_string(),
+            "src/a.rs".to_string(),
+            FileMetrics::default()
+                .with_effective_loc(10)
+                .with_private_function_count(1)
+                .with_private_complexity_sum(2)
+                .with_risk_score(12.0),
+        ),
+        FileRiskReport::new(
+            "demo-node".to_string(),
+            "src/b.rs".to_string(),
+            FileMetrics::default()
+                .with_effective_loc(20)
+                .with_private_function_count(2)
+                .with_private_complexity_sum(4)
+                .with_data_private_struct_count(1)
+                .with_risk_score(8.0),
+        ),
     ];
     let printer = ReportPrinter::new(10.0, 10);
 
@@ -268,52 +255,40 @@ fn select_visible_reports_threshold_filters_lower_scores() {
 
     // Assert
     assert_eq!(visible.len(), 1);
-    assert_eq!(visible[0].relative_file, "src/a.rs");
+    assert_eq!(visible[0].relative_file(), "src/a.rs");
 }
 
 #[test]
 fn select_visible_reports_top_limits_results() {
     // Arrange
     let reports = vec![
-        FileRiskReport {
-            functions: Vec::new(),
-            data_structs: Vec::new(),
-            behavioral_structs: Vec::new(),
-            package_name: "pkg".to_string(),
-            relative_file: "src/a.rs".to_string(),
-            effective_loc: 10,
-            private_function_count: 1,
-            private_complexity_sum: 1,
-            data_private_struct_count: 0,
-            behavioral_private_struct_count: 0,
-            risk_score: 20.0,
-        },
-        FileRiskReport {
-            functions: Vec::new(),
-            data_structs: Vec::new(),
-            behavioral_structs: Vec::new(),
-            package_name: "pkg".to_string(),
-            relative_file: "src/b.rs".to_string(),
-            effective_loc: 10,
-            private_function_count: 1,
-            private_complexity_sum: 1,
-            data_private_struct_count: 0,
-            behavioral_private_struct_count: 0,
-            risk_score: 15.0,
-        },
-        FileRiskReport {
-            functions: Vec::new(),
-            data_structs: Vec::new(),
-            behavioral_structs: Vec::new(),
-            package_name: "pkg".to_string(),
-            relative_file: "src/c.rs".to_string(),
-            effective_loc: 10,
-            private_function_count: 1,
-            private_complexity_sum: 1,
-            data_private_struct_count: 0,
-            behavioral_private_struct_count: 0,
-            risk_score: 10.0,
-        },
+        FileRiskReport::new(
+            "pkg".to_string(),
+            "src/a.rs".to_string(),
+            FileMetrics::default()
+                .with_effective_loc(10)
+                .with_private_function_count(1)
+                .with_private_complexity_sum(1)
+                .with_risk_score(20.0),
+        ),
+        FileRiskReport::new(
+            "pkg".to_string(),
+            "src/b.rs".to_string(),
+            FileMetrics::default()
+                .with_effective_loc(10)
+                .with_private_function_count(1)
+                .with_private_complexity_sum(1)
+                .with_risk_score(15.0),
+        ),
+        FileRiskReport::new(
+            "pkg".to_string(),
+            "src/c.rs".to_string(),
+            FileMetrics::default()
+                .with_effective_loc(10)
+                .with_private_function_count(1)
+                .with_private_complexity_sum(1)
+                .with_risk_score(10.0),
+        ),
     ];
     let printer = ReportPrinter::new(0.0, 2);
 

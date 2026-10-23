@@ -43,7 +43,7 @@ impl JsonReportRenderer {
             threshold: self.threshold,
             scored_files: reports.len(),
             visible_files: files.len(),
-            total_risk: reports.iter().map(|report| report.risk_score).sum(),
+            total_risk: reports.iter().map(|report| report.risk_score()).sum(),
             files,
         };
 

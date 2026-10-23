@@ -12,6 +12,7 @@ use crate::invocation::config::Config;
 use crate::invocation::manifest_resolver::ManifestResolver;
 use crate::reporting::json_report_renderer::JsonReportRenderer;
 use crate::reporting::report_printer::ReportPrinter;
+use std::path::Path;
 
 const OFFENDERS_FOUND: u8 = 2;
 
@@ -19,12 +20,12 @@ pub struct Runner;
 
 impl Runner {
     pub fn run(args: Args) -> Result<ExitCode> {
-        let config = Config {
-            manifest_path: args.manifest_path,
-            packages: args.packages,
-            threshold: args.threshold,
-            top: args.top,
-        };
+        let config = Config::new(
+            args.manifest_path().map(Path::to_path_buf),
+            args.packages().to_vec(),
+            args.threshold(),
+            args.top(),
+        );
 
         let resolver = ManifestResolver::new(config);
         let packages = resolver.resolve_packages()?;
@@ -35,11 +36,11 @@ impl Runner {
             reports.extend(analyzer.analyze_package(package)?);
         }
 
-        let printer = ReportPrinter::new(args.threshold, args.top);
-        if args.json {
+        let printer = ReportPrinter::new(args.threshold(), args.top());
+        if args.json() {
             println!(
                 "{}",
-                JsonReportRenderer::new(args.threshold).render(&reports)?
+                JsonReportRenderer::new(args.threshold()).render(&reports)?
             );
         } else {
             printer.print(&reports);

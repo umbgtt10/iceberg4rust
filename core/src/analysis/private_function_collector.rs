@@ -104,16 +104,12 @@ impl<'a> PrivateFunctionCollector<'a> {
 
     fn push_function(&mut self, sig: &Signature, block: &Block, is_hidden: bool) {
         let scorer = ComplexityScorer::new();
-        self.functions.push(PrivateFunctionMetrics {
-            name: sig.ident.to_string(),
-            line: sig.ident.span().start().line,
-            complexity: scorer.score(block),
-            used_private_structs: StructUsageCollector::collect_used_private_structs(
-                sig,
-                block,
-                self.helper_structs,
-            ),
+        self.functions.push(PrivateFunctionMetrics::new(
+            sig.ident.to_string(),
+            sig.ident.span().start().line,
+            scorer.score(block),
+            StructUsageCollector::collect_used_private_structs(sig, block, self.helper_structs),
             is_hidden,
-        });
+        ));
     }
 }

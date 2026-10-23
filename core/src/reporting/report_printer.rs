@@ -23,7 +23,7 @@ impl ReportPrinter {
     pub fn has_offenders(&self, reports: &[FileRiskReport]) -> bool {
         reports
             .iter()
-            .any(|report| report.risk_score >= self.threshold)
+            .any(|report| report.risk_score() >= self.threshold)
     }
 
     pub fn print(&self, reports: &[FileRiskReport]) {
@@ -42,13 +42,13 @@ impl ReportPrinter {
 
         let package_width = visible
             .iter()
-            .map(|report| report.package_name.len())
+            .map(|report| report.package_name().len())
             .max()
             .unwrap_or(7)
             .max("package".len());
         let file_width = visible
             .iter()
-            .map(|report| report.relative_file.len())
+            .map(|report| report.relative_file().len())
             .max()
             .unwrap_or(4)
             .max("file".len());
@@ -79,14 +79,14 @@ impl ReportPrinter {
         for report in &visible {
             println!(
                 "{:<package_width$}  {:<file_width$}  {:>5}  {:>13}  {:>18}  {:>12}  {:>18}  {:>10.2}",
-                report.package_name,
-                report.relative_file,
-                report.effective_loc,
-                report.private_function_count,
-                report.private_complexity_sum,
-                report.data_private_struct_count,
-                report.behavioral_private_struct_count,
-                report.risk_score,
+                report.package_name(),
+                report.relative_file(),
+                report.effective_loc(),
+                report.private_function_count(),
+                report.private_complexity_sum(),
+                report.data_private_struct_count(),
+                report.behavioral_private_struct_count(),
+                report.risk_score(),
             );
         }
 
@@ -100,7 +100,10 @@ impl ReportPrinter {
             visible.len(),
             self.threshold,
             self.top,
-            reports.iter().map(|report| report.risk_score).sum::<f64>(),
+            reports
+                .iter()
+                .map(|report| report.risk_score())
+                .sum::<f64>(),
         );
     }
 
@@ -112,7 +115,7 @@ impl ReportPrinter {
     pub fn select_visible<'a>(&self, reports: &'a [FileRiskReport]) -> Vec<&'a FileRiskReport> {
         let mut visible: Vec<&FileRiskReport> = reports
             .iter()
-            .filter(|report| report.risk_score >= self.threshold)
+            .filter(|report| report.risk_score() >= self.threshold)
             .collect();
         visible.sort_by(|left, right| RiskOrdering::descending(left, right));
         visible.truncate(self.top);

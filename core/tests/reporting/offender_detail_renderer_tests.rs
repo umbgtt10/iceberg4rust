@@ -2,33 +2,26 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use iceberg4rust::reporting::file_metrics::FileMetrics;
 use iceberg4rust::reporting::file_risk_report::FileRiskReport;
 use iceberg4rust::reporting::offender_detail_renderer::OffenderDetailRenderer;
 use iceberg4rust::reporting::private_function_report::PrivateFunctionReport;
 
 fn function(name: &str, line: usize, complexity: u32, is_hidden: bool) -> PrivateFunctionReport {
-    PrivateFunctionReport {
-        name: name.to_string(),
-        line,
-        complexity,
-        is_hidden,
-    }
+    PrivateFunctionReport::new(name.to_string(), line, complexity, is_hidden)
 }
 
 fn report(file: &str, functions: Vec<PrivateFunctionReport>) -> FileRiskReport {
-    FileRiskReport {
-        functions,
-        data_structs: Vec::new(),
-        behavioral_structs: Vec::new(),
-        package_name: "node".to_string(),
-        relative_file: file.to_string(),
-        effective_loc: 366,
-        private_function_count: 9,
-        private_complexity_sum: 31,
-        data_private_struct_count: 0,
-        behavioral_private_struct_count: 0,
-        risk_score: 20.87,
-    }
+    FileRiskReport::new(
+        "node".to_string(),
+        file.to_string(),
+        FileMetrics::default()
+            .with_functions(functions)
+            .with_effective_loc(366)
+            .with_private_function_count(9)
+            .with_private_complexity_sum(31)
+            .with_risk_score(20.87),
+    )
 }
 
 #[test]
@@ -107,9 +100,18 @@ fn render_names_the_file_and_its_risk() {
 #[test]
 fn render_names_the_helper_structs_when_present() {
     // Arrange
-    let mut offender = report("src/builder.rs", vec![function("build", 10, 2, true)]);
-    offender.data_structs = vec!["Payload".to_string()];
-    offender.behavioral_structs = vec!["Encoder".to_string()];
+    let offender = FileRiskReport::new(
+        "node".to_string(),
+        "src/builder.rs".to_string(),
+        FileMetrics::default()
+            .with_functions(vec![function("build", 10, 2, true)])
+            .with_data_structs(vec!["Payload".to_string()])
+            .with_behavioral_structs(vec!["Encoder".to_string()])
+            .with_effective_loc(366)
+            .with_private_function_count(9)
+            .with_private_complexity_sum(31)
+            .with_risk_score(20.87),
+    );
 
     // Act
     let rendered = OffenderDetailRenderer::render(&[&offender]);
