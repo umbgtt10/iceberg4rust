@@ -4,6 +4,7 @@
 
 use iceberg4rust::reporting::file_metrics::FileMetrics;
 use iceberg4rust::reporting::file_risk_report::FileRiskReport;
+use iceberg4rust::reporting::private_function_report::PrivateFunctionReport;
 
 #[test]
 fn file_risk_report_clone_produces_independent_copy() {
@@ -11,12 +12,14 @@ fn file_risk_report_clone_produces_independent_copy() {
     let report = FileRiskReport::new(
         "pkg".to_string(),
         "src/main.rs".to_string(),
-        FileMetrics::default()
-            .with_effective_loc(100)
-            .with_private_function_count(5)
-            .with_private_complexity_sum(20)
-            .with_data_private_struct_count(2)
-            .with_risk_score(12.0),
+        FileMetrics {
+            effective_loc: 100,
+            private_function_count: 5,
+            private_complexity_sum: 20,
+            data_private_struct_count: 2,
+            risk_score: 12.0,
+            ..Default::default()
+        },
     );
 
     // Act
@@ -32,13 +35,15 @@ fn file_risk_report_holds_provided_values() {
     let report = FileRiskReport::new(
         "pkg".to_string(),
         "src/lib.rs".to_string(),
-        FileMetrics::default()
-            .with_effective_loc(50)
-            .with_private_function_count(3)
-            .with_private_complexity_sum(12)
-            .with_data_private_struct_count(1)
-            .with_behavioral_private_struct_count(2)
-            .with_risk_score(25.5),
+        FileMetrics {
+            effective_loc: 50,
+            private_function_count: 3,
+            private_complexity_sum: 12,
+            data_private_struct_count: 1,
+            behavioral_private_struct_count: 2,
+            risk_score: 25.5,
+            ..Default::default()
+        },
     );
 
     // Assert
@@ -58,35 +63,41 @@ fn file_risk_report_partial_eq_compares_all_fields() {
     let a = FileRiskReport::new(
         "pkg".to_string(),
         "src/lib.rs".to_string(),
-        FileMetrics::default()
-            .with_effective_loc(50)
-            .with_private_function_count(3)
-            .with_private_complexity_sum(12)
-            .with_data_private_struct_count(1)
-            .with_behavioral_private_struct_count(2)
-            .with_risk_score(25.5),
+        FileMetrics {
+            effective_loc: 50,
+            private_function_count: 3,
+            private_complexity_sum: 12,
+            data_private_struct_count: 1,
+            behavioral_private_struct_count: 2,
+            risk_score: 25.5,
+            ..Default::default()
+        },
     );
     let b = FileRiskReport::new(
         "pkg".to_string(),
         "src/lib.rs".to_string(),
-        FileMetrics::default()
-            .with_effective_loc(50)
-            .with_private_function_count(3)
-            .with_private_complexity_sum(12)
-            .with_data_private_struct_count(1)
-            .with_behavioral_private_struct_count(2)
-            .with_risk_score(25.5),
+        FileMetrics {
+            effective_loc: 50,
+            private_function_count: 3,
+            private_complexity_sum: 12,
+            data_private_struct_count: 1,
+            behavioral_private_struct_count: 2,
+            risk_score: 25.5,
+            ..Default::default()
+        },
     );
     let c = FileRiskReport::new(
         "other".to_string(),
         "src/lib.rs".to_string(),
-        FileMetrics::default()
-            .with_effective_loc(50)
-            .with_private_function_count(3)
-            .with_private_complexity_sum(12)
-            .with_data_private_struct_count(1)
-            .with_behavioral_private_struct_count(2)
-            .with_risk_score(25.5),
+        FileMetrics {
+            effective_loc: 50,
+            private_function_count: 3,
+            private_complexity_sum: 12,
+            data_private_struct_count: 1,
+            behavioral_private_struct_count: 2,
+            risk_score: 25.5,
+            ..Default::default()
+        },
     );
 
     // Act & Assert
@@ -105,4 +116,37 @@ fn file_risk_report_zero_risk_score_is_stored_correctly() {
 
     // Assert
     assert!((report.risk_score() - 0.0).abs() < f64::EPSILON);
+}
+
+#[test]
+fn new_with_functions_and_helper_structs_keeps_them() {
+    // Arrange & Act
+    let report = FileRiskReport::new(
+        "pkg".to_string(),
+        "src/lib.rs".to_string(),
+        FileMetrics {
+            functions: vec![PrivateFunctionReport {
+                name: "decode".to_string(),
+                line: 42,
+                complexity: 7,
+                is_hidden: true,
+            }],
+            data_structs: vec!["Payload".to_string()],
+            behavioral_structs: vec!["Encoder".to_string()],
+            ..Default::default()
+        },
+    );
+
+    // Assert
+    assert_eq!(
+        report.functions(),
+        [PrivateFunctionReport {
+            name: "decode".to_string(),
+            line: 42,
+            complexity: 7,
+            is_hidden: true,
+        }]
+    );
+    assert_eq!(report.data_structs(), ["Payload".to_string()]);
+    assert_eq!(report.behavioral_structs(), ["Encoder".to_string()]);
 }

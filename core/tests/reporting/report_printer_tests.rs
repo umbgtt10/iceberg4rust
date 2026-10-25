@@ -12,13 +12,15 @@ fn report(file: &str, risk: f64) -> FileRiskReport {
     FileRiskReport::new(
         "node".to_string(),
         file.to_string(),
-        FileMetrics::default()
-            .with_effective_loc(100)
-            .with_private_function_count(5)
-            .with_private_complexity_sum(7)
-            .with_data_private_struct_count(1)
-            .with_behavioral_private_struct_count(2)
-            .with_risk_score(risk),
+        FileMetrics {
+            effective_loc: 100,
+            private_function_count: 5,
+            private_complexity_sum: 7,
+            data_private_struct_count: 1,
+            behavioral_private_struct_count: 2,
+            risk_score: risk,
+            ..Default::default()
+        },
     )
 }
 
@@ -26,13 +28,15 @@ fn report_in(package: &str, file: &str, risk: f64) -> FileRiskReport {
     FileRiskReport::new(
         package.to_string(),
         file.to_string(),
-        FileMetrics::default()
-            .with_effective_loc(100)
-            .with_private_function_count(5)
-            .with_private_complexity_sum(7)
-            .with_data_private_struct_count(1)
-            .with_behavioral_private_struct_count(2)
-            .with_risk_score(risk),
+        FileMetrics {
+            effective_loc: 100,
+            private_function_count: 5,
+            private_complexity_sum: 7,
+            data_private_struct_count: 1,
+            behavioral_private_struct_count: 2,
+            risk_score: risk,
+            ..Default::default()
+        },
     )
 }
 
@@ -120,12 +124,14 @@ fn print_report_with_reports_does_not_panic() {
     let reports = vec![FileRiskReport::new(
         "pkg".to_string(),
         "src/lib.rs".to_string(),
-        FileMetrics::default()
-            .with_effective_loc(50)
-            .with_private_function_count(3)
-            .with_private_complexity_sum(8)
-            .with_data_private_struct_count(1)
-            .with_risk_score(15.5),
+        FileMetrics {
+            effective_loc: 50,
+            private_function_count: 3,
+            private_complexity_sum: 8,
+            data_private_struct_count: 1,
+            risk_score: 15.5,
+            ..Default::default()
+        },
     )];
     let printer = ReportPrinter::new(10.0, 10);
 
@@ -231,21 +237,25 @@ fn select_visible_reports_threshold_filters_lower_scores() {
         FileRiskReport::new(
             "demo-node".to_string(),
             "src/a.rs".to_string(),
-            FileMetrics::default()
-                .with_effective_loc(10)
-                .with_private_function_count(1)
-                .with_private_complexity_sum(2)
-                .with_risk_score(12.0),
+            FileMetrics {
+                effective_loc: 10,
+                private_function_count: 1,
+                private_complexity_sum: 2,
+                risk_score: 12.0,
+                ..Default::default()
+            },
         ),
         FileRiskReport::new(
             "demo-node".to_string(),
             "src/b.rs".to_string(),
-            FileMetrics::default()
-                .with_effective_loc(20)
-                .with_private_function_count(2)
-                .with_private_complexity_sum(4)
-                .with_data_private_struct_count(1)
-                .with_risk_score(8.0),
+            FileMetrics {
+                effective_loc: 20,
+                private_function_count: 2,
+                private_complexity_sum: 4,
+                data_private_struct_count: 1,
+                risk_score: 8.0,
+                ..Default::default()
+            },
         ),
     ];
     let printer = ReportPrinter::new(10.0, 10);
@@ -265,29 +275,35 @@ fn select_visible_reports_top_limits_results() {
         FileRiskReport::new(
             "pkg".to_string(),
             "src/a.rs".to_string(),
-            FileMetrics::default()
-                .with_effective_loc(10)
-                .with_private_function_count(1)
-                .with_private_complexity_sum(1)
-                .with_risk_score(20.0),
+            FileMetrics {
+                effective_loc: 10,
+                private_function_count: 1,
+                private_complexity_sum: 1,
+                risk_score: 20.0,
+                ..Default::default()
+            },
         ),
         FileRiskReport::new(
             "pkg".to_string(),
             "src/b.rs".to_string(),
-            FileMetrics::default()
-                .with_effective_loc(10)
-                .with_private_function_count(1)
-                .with_private_complexity_sum(1)
-                .with_risk_score(15.0),
+            FileMetrics {
+                effective_loc: 10,
+                private_function_count: 1,
+                private_complexity_sum: 1,
+                risk_score: 15.0,
+                ..Default::default()
+            },
         ),
         FileRiskReport::new(
             "pkg".to_string(),
             "src/c.rs".to_string(),
-            FileMetrics::default()
-                .with_effective_loc(10)
-                .with_private_function_count(1)
-                .with_private_complexity_sum(1)
-                .with_risk_score(10.0),
+            FileMetrics {
+                effective_loc: 10,
+                private_function_count: 1,
+                private_complexity_sum: 1,
+                risk_score: 10.0,
+                ..Default::default()
+            },
         ),
     ];
     let printer = ReportPrinter::new(0.0, 2);

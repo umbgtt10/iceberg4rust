@@ -26,17 +26,17 @@ pub struct FileRiskReport {
 impl FileRiskReport {
     pub fn new(package_name: String, relative_file: String, metrics: FileMetrics) -> Self {
         Self {
-            functions: metrics.functions().to_vec(),
-            data_structs: metrics.data_structs().to_vec(),
-            behavioral_structs: metrics.behavioral_structs().to_vec(),
+            functions: metrics.functions,
+            data_structs: metrics.data_structs,
+            behavioral_structs: metrics.behavioral_structs,
             package_name,
             relative_file,
-            effective_loc: metrics.effective_loc(),
-            private_function_count: metrics.private_function_count(),
-            private_complexity_sum: metrics.private_complexity_sum(),
-            data_private_struct_count: metrics.data_private_struct_count(),
-            behavioral_private_struct_count: metrics.behavioral_private_struct_count(),
-            risk_score: metrics.risk_score(),
+            effective_loc: metrics.effective_loc,
+            private_function_count: metrics.private_function_count,
+            private_complexity_sum: metrics.private_complexity_sum,
+            data_private_struct_count: metrics.data_private_struct_count,
+            behavioral_private_struct_count: metrics.behavioral_private_struct_count,
+            risk_score: metrics.risk_score,
         }
     }
 

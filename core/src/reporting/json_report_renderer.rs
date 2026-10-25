@@ -12,11 +12,11 @@ use serde_json::to_string_pretty;
 
 #[derive(Serialize)]
 struct JsonReport<'a> {
-    threshold: f64,
-    scored_files: usize,
-    visible_files: usize,
-    total_risk: f64,
-    files: Vec<&'a FileRiskReport>,
+    pub threshold: f64,
+    pub scored_files: usize,
+    pub visible_files: usize,
+    pub total_risk: f64,
+    pub files: Vec<&'a FileRiskReport>,
 }
 
 pub struct JsonReportRenderer {

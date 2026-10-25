@@ -32,9 +32,9 @@ impl OffenderDetailRenderer {
         let mut ordered: Vec<&PrivateFunctionReport> = functions.iter().collect();
         ordered.sort_by(|left, right| {
             right
-                .complexity()
-                .cmp(&left.complexity())
-                .then_with(|| left.line().cmp(&right.line()))
+                .complexity
+                .cmp(&left.complexity)
+                .then_with(|| left.line.cmp(&right.line))
         });
         ordered
     }
@@ -42,19 +42,12 @@ impl OffenderDetailRenderer {
     fn render_function(function: &PrivateFunctionReport) -> String {
         // A trait method is flagged because it does not count toward the private
         // surface, so a reader is not left wondering why the tally disagrees.
-        let marker = if function.is_hidden() {
-            ""
-        } else {
-            "  (trait)"
-        };
+        let marker = if function.is_hidden { "" } else { "  (trait)" };
         let mut out = String::new();
         let _ = writeln!(
             out,
             "    {:>6}  {:>10}  {}{}",
-            function.line(),
-            function.complexity(),
-            function.name(),
-            marker,
+            function.line, function.complexity, function.name, marker,
         );
         out
     }

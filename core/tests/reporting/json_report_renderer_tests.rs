@@ -19,13 +19,15 @@ fn report(package: &str, file: &str, risk: f64) -> FileRiskReport {
     FileRiskReport::new(
         package.to_string(),
         file.to_string(),
-        FileMetrics::default()
-            .with_effective_loc(223)
-            .with_private_function_count(63)
-            .with_private_complexity_sum(12)
-            .with_data_private_struct_count(1)
-            .with_behavioral_private_struct_count(2)
-            .with_risk_score(risk),
+        FileMetrics {
+            effective_loc: 223,
+            private_function_count: 63,
+            private_complexity_sum: 12,
+            data_private_struct_count: 1,
+            behavioral_private_struct_count: 2,
+            risk_score: risk,
+            ..Default::default()
+        },
     )
 }
 

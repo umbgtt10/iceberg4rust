@@ -60,12 +60,12 @@ impl ManifestResolver {
     pub fn resolve_packages(&self) -> Result<Vec<PackageContext>> {
         let mut command = MetadataCommand::new();
         command.no_deps();
-        if let Some(manifest_path) = &self.config.manifest_path() {
+        if let Some(manifest_path) = &self.config.manifest_path {
             command.manifest_path(manifest_path);
         }
 
         let metadata = command.exec().context("failed to read Cargo metadata")?;
-        let packages = Self::select_packages(&metadata, self.config.packages())?;
+        let packages = Self::select_packages(&metadata, &self.config.packages)?;
 
         packages
             .into_iter()
@@ -112,10 +112,10 @@ impl ManifestResolver {
         collector.collect_from_targets(&package.targets);
         collector.ensure_fallback(&manifest_dir);
 
-        Ok(PackageContext::new(
-            package.name.to_string(),
+        Ok(PackageContext {
+            name: package.name.to_string(),
             manifest_dir,
-            collector.into_roots(),
-        ))
+            source_roots: collector.into_roots(),
+        })
     }
 }

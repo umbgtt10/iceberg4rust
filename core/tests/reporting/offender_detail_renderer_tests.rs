@@ -8,19 +8,26 @@ use iceberg4rust::reporting::offender_detail_renderer::OffenderDetailRenderer;
 use iceberg4rust::reporting::private_function_report::PrivateFunctionReport;
 
 fn function(name: &str, line: usize, complexity: u32, is_hidden: bool) -> PrivateFunctionReport {
-    PrivateFunctionReport::new(name.to_string(), line, complexity, is_hidden)
+    PrivateFunctionReport {
+        name: name.to_string(),
+        line,
+        complexity,
+        is_hidden,
+    }
 }
 
 fn report(file: &str, functions: Vec<PrivateFunctionReport>) -> FileRiskReport {
     FileRiskReport::new(
         "node".to_string(),
         file.to_string(),
-        FileMetrics::default()
-            .with_functions(functions)
-            .with_effective_loc(366)
-            .with_private_function_count(9)
-            .with_private_complexity_sum(31)
-            .with_risk_score(20.87),
+        FileMetrics {
+            functions,
+            effective_loc: 366,
+            private_function_count: 9,
+            private_complexity_sum: 31,
+            risk_score: 20.87,
+            ..Default::default()
+        },
     )
 }
 
@@ -103,14 +110,16 @@ fn render_names_the_helper_structs_when_present() {
     let offender = FileRiskReport::new(
         "node".to_string(),
         "src/builder.rs".to_string(),
-        FileMetrics::default()
-            .with_functions(vec![function("build", 10, 2, true)])
-            .with_data_structs(vec!["Payload".to_string()])
-            .with_behavioral_structs(vec!["Encoder".to_string()])
-            .with_effective_loc(366)
-            .with_private_function_count(9)
-            .with_private_complexity_sum(31)
-            .with_risk_score(20.87),
+        FileMetrics {
+            functions: vec![function("build", 10, 2, true)],
+            data_structs: vec!["Payload".to_string()],
+            behavioral_structs: vec!["Encoder".to_string()],
+            effective_loc: 366,
+            private_function_count: 9,
+            private_complexity_sum: 31,
+            risk_score: 20.87,
+            ..Default::default()
+        },
     );
 
     // Act

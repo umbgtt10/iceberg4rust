@@ -34,7 +34,11 @@ impl Worker {
 "#;
     write(src.join("lib.rs"), hides_private_work).expect("write lib");
     write(src.join("other.rs"), hides_private_work).expect("write other");
-    let package = PackageContext::new(String::from("demo"), root.clone(), vec![src]);
+    let package = PackageContext {
+        name: String::from("demo"),
+        manifest_dir: root.clone(),
+        source_roots: vec![src],
+    };
     let analyzer = Analyzer::new();
 
     // Act
@@ -51,7 +55,11 @@ fn analyze_package_over_a_source_root_that_holds_nothing_returns_no_reports() {
     let root = dir.path().to_path_buf();
     let src = root.join("src");
     create_dir_all(&src).expect("create src");
-    let package = PackageContext::new(String::from("demo"), root.clone(), vec![src]);
+    let package = PackageContext {
+        name: String::from("demo"),
+        manifest_dir: root.clone(),
+        source_roots: vec![src],
+    };
     let analyzer = Analyzer::new();
 
     // Act
@@ -88,9 +96,9 @@ impl Worker {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count(), 2);
-    assert_eq!(metrics.private_complexity_sum(), 2);
-    assert!(metrics.risk_score() > 0.0);
+    assert_eq!(metrics.private_function_count, 2);
+    assert_eq!(metrics.private_complexity_sum, 2);
+    assert!(metrics.risk_score > 0.0);
 }
 
 #[test]
@@ -117,9 +125,9 @@ mod tests {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count(), 1);
-    assert_eq!(metrics.data_private_struct_count(), 0);
-    assert_eq!(metrics.behavioral_private_struct_count(), 1);
+    assert_eq!(metrics.private_function_count, 1);
+    assert_eq!(metrics.data_private_struct_count, 0);
+    assert_eq!(metrics.behavioral_private_struct_count, 1);
 }
 
 #[test]
@@ -131,11 +139,11 @@ fn analyze_source_empty_source_returns_zero_metrics() {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count(), 0);
-    assert_eq!(metrics.private_complexity_sum(), 0);
-    assert_eq!(metrics.data_private_struct_count(), 0);
-    assert_eq!(metrics.behavioral_private_struct_count(), 0);
-    assert!(metrics.risk_score().abs() < f64::EPSILON);
+    assert_eq!(metrics.private_function_count, 0);
+    assert_eq!(metrics.private_complexity_sum, 0);
+    assert_eq!(metrics.data_private_struct_count, 0);
+    assert_eq!(metrics.behavioral_private_struct_count, 0);
+    assert!(metrics.risk_score.abs() < f64::EPSILON);
 }
 
 #[test]
@@ -154,8 +162,8 @@ impl Worker {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count(), 2);
-    assert!(metrics.risk_score() > 0.0);
+    assert_eq!(metrics.private_function_count, 2);
+    assert!(metrics.risk_score > 0.0);
 }
 
 #[test]
@@ -189,14 +197,14 @@ impl Primary {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.data_structs(), vec!["DataHelper".to_string()]);
+    assert_eq!(metrics.data_structs, vec!["DataHelper".to_string()]);
     assert_eq!(
-        metrics.behavioral_structs(),
+        metrics.behavioral_structs,
         vec!["BehaviouralHelper".to_string()]
     );
     assert_eq!(
-        metrics.data_private_struct_count(),
-        metrics.data_structs().len()
+        metrics.data_private_struct_count,
+        metrics.data_structs.len()
     );
 }
 
@@ -233,11 +241,11 @@ impl Worker {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count(), 2);
-    assert!(metrics.private_complexity_sum() > 0);
-    assert_eq!(metrics.data_private_struct_count(), 1);
-    assert_eq!(metrics.behavioral_private_struct_count(), 1);
-    assert!(metrics.risk_score() > 0.0);
+    assert_eq!(metrics.private_function_count, 2);
+    assert!(metrics.private_complexity_sum > 0);
+    assert_eq!(metrics.data_private_struct_count, 1);
+    assert_eq!(metrics.behavioral_private_struct_count, 1);
+    assert!(metrics.risk_score > 0.0);
 }
 
 #[test]
@@ -259,9 +267,9 @@ impl Manager {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count(), 1);
-    assert_eq!(metrics.data_private_struct_count(), 1);
-    assert_eq!(metrics.behavioral_private_struct_count(), 0);
+    assert_eq!(metrics.private_function_count, 1);
+    assert_eq!(metrics.data_private_struct_count, 1);
+    assert_eq!(metrics.behavioral_private_struct_count, 0);
 }
 
 #[test]
@@ -285,12 +293,12 @@ impl Worker {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.functions().len(), 2);
-    assert_eq!(metrics.functions()[0].name(), "simple");
-    assert_eq!(metrics.functions()[0].line(), 5);
-    assert_eq!(metrics.functions()[0].complexity(), 0);
-    assert_eq!(metrics.functions()[1].name(), "branching");
-    assert!(metrics.functions()[1].complexity() > 0);
+    assert_eq!(metrics.functions.len(), 2);
+    assert_eq!(metrics.functions[0].name, "simple");
+    assert_eq!(metrics.functions[0].line, 5);
+    assert_eq!(metrics.functions[0].complexity, 0);
+    assert_eq!(metrics.functions[1].name, "branching");
+    assert!(metrics.functions[1].complexity > 0);
 }
 
 // Restricting a private helper must not change the score: pub(crate) is not an
@@ -321,10 +329,10 @@ impl Worker {
 
     // Assert
     assert_eq!(
-        private.private_function_count(),
-        restricted.private_function_count()
+        private.private_function_count,
+        restricted.private_function_count
     );
-    assert!((private.risk_score() - restricted.risk_score()).abs() < f64::EPSILON);
+    assert!((private.risk_score - restricted.risk_score).abs() < f64::EPSILON);
 }
 
 #[test]
@@ -342,10 +350,10 @@ impl FileType {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count(), 0);
-    assert_eq!(metrics.data_private_struct_count(), 0);
-    assert_eq!(metrics.behavioral_private_struct_count(), 0);
-    assert!(metrics.risk_score().abs() < f64::EPSILON);
+    assert_eq!(metrics.private_function_count, 0);
+    assert_eq!(metrics.data_private_struct_count, 0);
+    assert_eq!(metrics.behavioral_private_struct_count, 0);
+    assert!(metrics.risk_score.abs() < f64::EPSILON);
 }
 
 // The counterpart: breadth is free, but logic inside a trait impl is not.
@@ -372,9 +380,9 @@ impl Dispatching for Router {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count(), 0);
-    assert!(metrics.private_complexity_sum() > 0);
-    assert!(metrics.risk_score() > 0.0);
+    assert_eq!(metrics.private_function_count, 0);
+    assert!(metrics.private_complexity_sum > 0);
+    assert!(metrics.risk_score > 0.0);
 }
 
 // A wide trait implemented with empty bodies. This shape scored 49.19 when
@@ -392,9 +400,9 @@ fn analyze_source_wide_no_op_trait_impl_scores_zero_risk() {
     let metrics = Analyzer::new().analyze_source(&source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count(), 0);
-    assert_eq!(metrics.private_complexity_sum(), 0);
-    assert!(metrics.risk_score().abs() < f64::EPSILON);
+    assert_eq!(metrics.private_function_count, 0);
+    assert_eq!(metrics.private_complexity_sum, 0);
+    assert!(metrics.risk_score.abs() < f64::EPSILON);
 }
 
 #[test]

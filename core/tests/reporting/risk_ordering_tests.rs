@@ -11,11 +11,13 @@ fn report(file: &str, risk: f64) -> FileRiskReport {
     FileRiskReport::new(
         "pkg".to_string(),
         file.to_string(),
-        FileMetrics::default()
-            .with_effective_loc(100)
-            .with_private_function_count(4)
-            .with_private_complexity_sum(6)
-            .with_risk_score(risk),
+        FileMetrics {
+            effective_loc: 100,
+            private_function_count: 4,
+            private_complexity_sum: 6,
+            risk_score: risk,
+            ..Default::default()
+        },
     )
 }
 
