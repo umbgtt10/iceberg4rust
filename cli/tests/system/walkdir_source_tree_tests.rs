@@ -10,8 +10,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
-// A file name that is not UTF-8 can only be made on Unix.
-#[cfg(unix)]
+// A file name that is not UTF-8 can only be made on Linux: Windows names are
+// UTF-16, and macOS's file system refuses a name that is not valid UTF-8.
+#[cfg(target_os = "linux")]
 mod not_utf8 {
     use super::source_path;
     use iceberg4rust::traits::source_tree::SourceTree;
