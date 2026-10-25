@@ -119,7 +119,6 @@ fn resolve_packages_against_this_package_returns_it_with_its_source_root() {
         packages: vec![String::from("cargo-iceberg4rust")],
         threshold: 15.0,
         top: 10,
-        json: false,
     };
     let reader = CargoWorkspaceReader::new(Some(PathBuf::from("Cargo.toml")));
     let resolver = ManifestResolver::new(&reader);

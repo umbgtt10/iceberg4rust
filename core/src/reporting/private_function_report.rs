@@ -2,9 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use serde::Serialize;
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PrivateFunctionReport {
     pub name: String,
     pub line: usize,

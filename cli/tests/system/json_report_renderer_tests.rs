@@ -4,13 +4,15 @@
 
 use iceberg4rust::reporting::file_metrics::FileMetrics;
 use iceberg4rust::reporting::file_risk_report::FileRiskReport;
-use iceberg4rust::reporting::json_report_renderer::JsonReportRenderer;
+use iceberg4rust::reporting::report_selection::ReportSelection;
+use iceberg4rust::traits::report_renderer::ReportRenderer;
+use iceberg4rust_cli::system::json_report_renderer::JsonReportRenderer;
 use serde_json::Value;
 use serde_json::from_str;
 
 fn rendered(reports: &[FileRiskReport], threshold: f64) -> Value {
-    let json = JsonReportRenderer::new(threshold)
-        .render(reports)
+    let json = JsonReportRenderer::new()
+        .render(&ReportSelection::new(threshold, 1).report(reports))
         .expect("render should succeed");
     from_str(&json).expect("output should be valid json")
 }

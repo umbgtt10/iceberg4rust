@@ -4,11 +4,9 @@
 
 use crate::reporting::private_function_report::PrivateFunctionReport;
 
-use serde::Serialize;
-
 use crate::reporting::file_metrics::FileMetrics;
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FileRiskReport {
     functions: Vec<PrivateFunctionReport>,
     data_structs: Vec<String>,

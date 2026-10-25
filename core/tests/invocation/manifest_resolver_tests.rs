@@ -16,7 +16,6 @@ fn config(packages: &[&str]) -> Config {
         packages: packages.iter().map(|name| String::from(*name)).collect(),
         threshold: 15.0,
         top: 10,
-        json: false,
     }
 }
 

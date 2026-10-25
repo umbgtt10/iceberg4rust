@@ -3,5 +3,6 @@
 // SPDX-License-Identifier: MIT
 
 pub mod cargo_workspace_reader;
+pub mod json_report_renderer;
 pub mod portable_path;
 pub mod walkdir_source_tree;

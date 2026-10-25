@@ -36,7 +36,6 @@ impl Args {
             packages: self.packages.clone(),
             threshold: self.threshold,
             top: self.top,
-            json: self.json,
         }
     }
 

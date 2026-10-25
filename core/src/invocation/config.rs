@@ -7,5 +7,4 @@ pub struct Config {
     pub packages: Vec<String>,
     pub threshold: f64,
     pub top: usize,
-    pub json: bool,
 }

@@ -4,9 +4,11 @@
 
 pub mod file_metrics;
 pub mod file_risk_report;
-pub mod json_report_renderer;
 pub mod offender_detail_renderer;
 pub mod private_function_metrics;
 pub mod private_function_report;
-pub mod report_printer;
+pub mod render_failure;
+pub mod report_selection;
 pub mod risk_ordering;
+pub mod risk_report;
+pub mod text_report_renderer;

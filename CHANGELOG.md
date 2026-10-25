@@ -27,9 +27,12 @@ for stern4rust's coming `records-and-objects` rule.
   there. Both crates share the workspace's version.
 - `invocation::args::Args` moves to `iceberg4rust_cli::invocation::args::Args`
   and gains `config()`, the `Config` the core reads.
-- `invocation::runner::Runner::run(Args)` is `Runner::new(&dyn WorkspaceReader,
-  &dyn SourceTree)` then `run(&self, &Config)`; the argv fix-up, the parsing
-  and the choice of cargo and the real file system are
+- `invocation::runner::Runner::run(Args) -> Result<ExitCode>` is
+  `Runner::new(&dyn WorkspaceReader, &dyn SourceTree, &dyn ReportRenderer)`
+  then `run(&self, &Config) -> Result<invocation::run_outcome::RunOutcome>`:
+  the report as text and the verdict, `has_offenders`. The argv fix-up, the
+  parsing, the choice of cargo, the real file system and the report's format,
+  printing, and the exit code are
   `iceberg4rust_cli::invocation::entry_point::EntryPoint`'s.
 - The core no longer reads cargo metadata: the new port
   `traits::workspace_reader::WorkspaceReader` describes the workspace in the
@@ -56,7 +59,20 @@ for stern4rust's coming `records-and-objects` rule.
   as its only separator: `PackageContext`'s `manifest_dir` and `source_roots`,
   and `ManifestResolver::relative_file(&SourcePath, &SourcePath)`. A file the
   tree cannot list or read fails with `workspace::source_read_failure::SourceReadFailure`.
-- `Config` gains `json: bool`.
+- `reporting::report_printer::ReportPrinter` splits in two.
+  `reporting::report_selection::ReportSelection` keeps `new(threshold, top)`,
+  `has_offenders` and `select_visible`, and builds the
+  `reporting::risk_report::RiskReport` a renderer is handed: every offender
+  ranked, the `top` of them, and the totals. `reporting::text_report_renderer::TextReportRenderer`
+  implements the new port `traits::report_renderer::ReportRenderer`; `print`,
+  which wrote to stdout, is `render`, which returns the same text.
+- `reporting::json_report_renderer::JsonReportRenderer` moves to
+  `iceberg4rust_cli::system::json_report_renderer::JsonReportRenderer`, another
+  `ReportRenderer`, with serialisable records of its own: `FileRiskReport` and
+  `PrivateFunctionReport` no longer derive `Serialize`, and the library no
+  longer depends on serde or serde_json. A renderer that fails says
+  `failed to render the report` (`reporting::render_failure::RenderFailure`);
+  0.3.1's `failed to render report as JSON` could not be reached.
 
 ### Changed
 - `analysis::struct_usage_collector::collect_used_private_structs` is

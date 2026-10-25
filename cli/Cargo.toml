@@ -33,8 +33,9 @@ anyhow = { workspace = true }
 cargo_metadata = { workspace = true }
 clap = { workspace = true }
 iceberg4rust-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 walkdir = { workspace = true }
 
 [dev-dependencies]
-serde_json = { workspace = true }
 tempfile = { workspace = true }

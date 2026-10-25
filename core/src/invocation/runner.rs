@@ -2,35 +2,42 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::process::ExitCode;
-
 use anyhow::Result;
 
 use crate::invocation::analyzer::Analyzer;
 use crate::invocation::config::Config;
 use crate::invocation::manifest_resolver::ManifestResolver;
 use crate::invocation::package_analyzer::PackageAnalyzer;
-use crate::reporting::json_report_renderer::JsonReportRenderer;
-use crate::reporting::report_printer::ReportPrinter;
+use crate::invocation::run_outcome::RunOutcome;
+use crate::reporting::report_selection::ReportSelection;
+use crate::traits::report_renderer::ReportRenderer;
 use crate::traits::source_tree::SourceTree;
 use crate::traits::workspace_reader::WorkspaceReader;
-
-const OFFENDERS_FOUND: u8 = 2;
 
 pub struct Runner<'a> {
     resolver: ManifestResolver<'a>,
     analyzer: PackageAnalyzer<'a>,
+    renderer: &'a dyn ReportRenderer,
 }
 
 impl<'a> Runner<'a> {
-    pub fn new(workspace_reader: &'a dyn WorkspaceReader, source_tree: &'a dyn SourceTree) -> Self {
+    pub fn new(
+        workspace_reader: &'a dyn WorkspaceReader,
+        source_tree: &'a dyn SourceTree,
+        renderer: &'a dyn ReportRenderer,
+    ) -> Self {
         Self {
             resolver: ManifestResolver::new(workspace_reader),
             analyzer: PackageAnalyzer::new(source_tree, Analyzer::new()),
+            renderer,
         }
     }
 
-    pub fn run(&self, config: &Config) -> Result<ExitCode> {
+    // The verdict is taken from the same selection the renderer is handed, so a
+    // caller that reads only `has_offenders` and one that reads the output can
+    // never disagree. Printing it, and turning it into an exit code, is the
+    // caller's.
+    pub fn run(&self, config: &Config) -> Result<RunOutcome> {
         let packages = self.resolver.resolve_packages(config)?;
 
         let mut reports = Vec::new();
@@ -38,23 +45,12 @@ impl<'a> Runner<'a> {
             reports.extend(self.analyzer.analyze_package(package)?);
         }
 
-        let printer = ReportPrinter::new(config.threshold, config.top);
-        if config.json {
-            println!(
-                "{}",
-                JsonReportRenderer::new(config.threshold).render(&reports)?
-            );
-        } else {
-            printer.print(&reports);
-        }
+        let selection = ReportSelection::new(config.threshold, config.top);
+        let output = self.renderer.render(&selection.report(&reports))?;
 
-        // 0 clean, 2 offenders, 1 for an error via the `Err` path. A distinct
-        // code for offenders lets a caller that keeps its own allow-list tell
-        // "the tool failed" from "the tool found something".
-        Ok(if printer.has_offenders(&reports) {
-            ExitCode::from(OFFENDERS_FOUND)
-        } else {
-            ExitCode::SUCCESS
+        Ok(RunOutcome {
+            output,
+            has_offenders: selection.has_offenders(&reports),
         })
     }
 }
