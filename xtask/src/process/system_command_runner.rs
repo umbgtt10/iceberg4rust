@@ -43,7 +43,10 @@ impl CommandRunner for SystemCommandRunner {
             .args(args)
             .status()
             .map(|status| status.code())
-            .map_err(|error| LaunchFailure::new(program.to_string(), error.to_string()))
+            .map_err(|error| LaunchFailure {
+                program: program.to_string(),
+                reason: error.to_string(),
+            })
     }
 
     fn run_capturing(
@@ -54,12 +57,15 @@ impl CommandRunner for SystemCommandRunner {
         let output = Command::new(program)
             .args(args)
             .output()
-            .map_err(|error| LaunchFailure::new(program.to_string(), error.to_string()))?;
+            .map_err(|error| LaunchFailure {
+                program: program.to_string(),
+                reason: error.to_string(),
+            })?;
 
-        Ok(CommandOutcome::new(
-            output.status.code(),
-            String::from_utf8_lossy(&output.stdout).into_owned(),
-            String::from_utf8_lossy(&output.stderr).into_owned(),
-        ))
+        Ok(CommandOutcome {
+            exit_code: output.status.code(),
+            stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
+            stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
+        })
     }
 }

@@ -40,11 +40,11 @@ impl<'a> ShearGate<'a> {
                 self.manifest_path.clone(),
             ],
         )?;
-        if metadata.exit_code() != Some(0) {
-            return Err(GateFailure::CouldNotRun(metadata.exit_code()));
+        if metadata.exit_code != Some(0) {
+            return Err(GateFailure::CouldNotRun(metadata.exit_code));
         }
         let unexplained = IgnoreReasons::new()
-            .unexplained(metadata.stdout())
+            .unexplained(&metadata.stdout)
             .map_err(|error| {
                 GateFailure::Found(format!("could not read cargo metadata: {error}"))
             })?;
