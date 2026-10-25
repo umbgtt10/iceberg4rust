@@ -8,7 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 The tool's behaviour, command line and scoring are unchanged. One `pub` free
 function became an associated function, for stern4rust 0.17.0's new
-`owned-functions` rule -- a file with a subject holds no free function.
+`owned-functions` rule -- a file with a subject holds no free function. `Args`
+and `FileRiskReport` no longer expose their fields, for stern4rust's coming
+`records-and-objects` rule.
 
 ### Changed
 - `analysis::struct_usage_collector::collect_used_private_structs` is
@@ -16,6 +18,18 @@ function became an associated function, for stern4rust 0.17.0's new
   `StructUsageCollector`. Three private helpers -- `is_private_item`,
   `impl_target_name` and `first_struct_name` -- move into the impl blocks of
   the types that call them.
+- `Args` and `FileRiskReport` keep their fields private behind getters: they
+  have behaviour, and stern4rust's coming `records-and-objects` rule asks an
+  object to hide its fields. Each field is read through a getter named after
+  it. A `FileRiskReport` is built from a file's metrics with
+  `FileRiskReport::new(package_name, relative_file, metrics)`; its JSON is
+  unchanged.
+- `Config`, `PackageContext`, `FileMetrics`, `PrivateFunctionMetrics` and
+  `PrivateFunctionReport` are records, as in 0.3.1: their fields stay `pub`,
+  with no getters, constructors or `with_` steps, for stern4rust's coming
+  `records-and-objects` rule. `FileMetrics` derives `Default`, so a literal
+  can name only the fields it sets and take the rest from
+  `..Default::default()`.
 - All twenty-four stern4rust rules apply to every workspace member.
 
 ## [0.3.1] - 2026-10-10
