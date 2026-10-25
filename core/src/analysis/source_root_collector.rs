@@ -3,15 +3,14 @@
 // SPDX-License-Identifier: MIT
 
 use std::collections::BTreeSet;
-use std::path::{Path, PathBuf};
-
-use cargo_metadata::Target;
 
 use crate::invocation::manifest_resolver::ManifestResolver;
+use crate::workspace::source_path::SourcePath;
+use crate::workspace::target_description::TargetDescription;
 
 #[derive(Default)]
 pub struct SourceRootCollector {
-    source_roots: BTreeSet<PathBuf>,
+    source_roots: BTreeSet<SourcePath>,
 }
 
 impl SourceRootCollector {
@@ -21,23 +20,23 @@ impl SourceRootCollector {
         }
     }
 
-    pub fn collect_from_targets(&mut self, targets: &[Target]) {
+    pub fn collect_from_targets(&mut self, targets: &[TargetDescription]) {
         for target in targets {
             self.try_insert_root(target);
         }
     }
 
-    pub fn ensure_fallback(&mut self, manifest_dir: &Path) {
+    pub fn ensure_fallback(&mut self, manifest_dir: &SourcePath) {
         if self.source_roots.is_empty() {
             self.source_roots.insert(manifest_dir.join("src"));
         }
     }
 
-    pub fn into_roots(self) -> Vec<PathBuf> {
+    pub fn into_roots(self) -> Vec<SourcePath> {
         self.source_roots.into_iter().collect()
     }
 
-    fn try_insert_root(&mut self, target: &Target) {
+    fn try_insert_root(&mut self, target: &TargetDescription) {
         if !ManifestResolver::is_production_target(target) {
             return;
         }
@@ -50,9 +49,8 @@ impl SourceRootCollector {
             return;
         }
 
-        let path = target.src_path.clone().into_std_path_buf();
-        if let Some(parent) = path.parent() {
-            self.source_roots.insert(parent.to_path_buf());
+        if let Some(parent) = target.src_path.parent() {
+            self.source_roots.insert(parent);
         }
     }
 }

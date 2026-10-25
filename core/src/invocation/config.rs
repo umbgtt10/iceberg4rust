@@ -2,11 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::path::PathBuf;
-
 #[derive(Debug, Clone)]
 pub struct Config {
-    pub manifest_path: Option<PathBuf>,
     pub packages: Vec<String>,
     pub threshold: f64,
     pub top: usize,

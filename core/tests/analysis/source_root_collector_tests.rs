@@ -2,93 +2,50 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use cargo_metadata::Target;
 use iceberg4rust::analysis::source_root_collector::SourceRootCollector;
-use serde_json::from_value;
-use std::path::PathBuf;
+use iceberg4rust::workspace::source_path::SourcePath;
+use iceberg4rust::workspace::target_description::TargetDescription;
 
-fn bench_target(src_path: &str) -> Target {
-    from_value(serde_json::json!({
-        "name": "bench_heavy",
-        "kind": ["bench"],
-        "crate_types": ["lib"],
-        "src_path": src_path,
-        "edition": "2021",
-        "doc": false,
-        "doctest": false,
-        "test": false
-    }))
-    .expect("valid Target")
+fn bench_target(src_path: &str) -> TargetDescription {
+    TargetDescription {
+        kinds: vec![String::from("bench")],
+        src_path: SourcePath::new(String::from(src_path)),
+    }
 }
 
-fn bin_target(src_path: &str) -> Target {
-    from_value(serde_json::json!({
-        "name": "my_bin",
-        "kind": ["bin"],
-        "crate_types": ["bin"],
-        "src_path": src_path,
-        "edition": "2021",
-        "doc": true,
-        "doctest": false,
-        "test": true
-    }))
-    .expect("valid Target")
+fn bin_target(src_path: &str) -> TargetDescription {
+    TargetDescription {
+        kinds: vec![String::from("bin")],
+        src_path: SourcePath::new(String::from(src_path)),
+    }
 }
 
-fn build_target(src_path: &str) -> Target {
-    from_value(serde_json::json!({
-        "name": "build_script",
-        "kind": ["custom-build"],
-        "crate_types": ["lib"],
-        "src_path": src_path,
-        "edition": "2021",
-        "doc": false,
-        "doctest": false,
-        "test": false
-    }))
-    .expect("valid Target")
+fn build_target(src_path: &str) -> TargetDescription {
+    TargetDescription {
+        kinds: vec![String::from("custom-build")],
+        src_path: SourcePath::new(String::from(src_path)),
+    }
 }
 
-fn example_target(src_path: &str) -> Target {
-    from_value(serde_json::json!({
-        "name": "example_demo",
-        "kind": ["example"],
-        "crate_types": ["lib"],
-        "src_path": src_path,
-        "edition": "2021",
-        "doc": false,
-        "doctest": false,
-        "test": false
-    }))
-    .expect("valid Target")
+fn example_target(src_path: &str) -> TargetDescription {
+    TargetDescription {
+        kinds: vec![String::from("example")],
+        src_path: SourcePath::new(String::from(src_path)),
+    }
 }
 
-fn lib_target(src_path: &str) -> Target {
-    from_value(serde_json::json!({
-        "name": "my_crate",
-        "kind": ["lib"],
-        "crate_types": ["lib"],
-        "src_path": src_path,
-        "edition": "2021",
-        "doc": true,
-        "doctest": true,
-        "test": true
-    }))
-    .expect("valid Target")
+fn lib_target(src_path: &str) -> TargetDescription {
+    TargetDescription {
+        kinds: vec![String::from("lib")],
+        src_path: SourcePath::new(String::from(src_path)),
+    }
 }
 
-fn test_target(src_path: &str) -> Target {
-    from_value(serde_json::json!({
-        "name": "test_integration",
-        "kind": ["test"],
-        "crate_types": ["lib"],
-        "src_path": src_path,
-        "edition": "2021",
-        "doc": false,
-        "doctest": false,
-        "test": true
-    }))
-    .expect("valid Target")
+fn test_target(src_path: &str) -> TargetDescription {
+    TargetDescription {
+        kinds: vec![String::from("test")],
+        src_path: SourcePath::new(String::from(src_path)),
+    }
 }
 
 #[test]
@@ -116,7 +73,10 @@ fn collect_from_targets_bin_target_adds_parent_dir() {
 
     // Assert
     let roots = collector.into_roots();
-    assert_eq!(roots, vec![PathBuf::from("/home/user/project/src")]);
+    assert_eq!(
+        roots,
+        vec![SourcePath::new(String::from("/home/user/project/src"))]
+    );
 }
 
 #[test]
@@ -158,7 +118,10 @@ fn collect_from_targets_lib_target_adds_parent_dir() {
 
     // Assert
     let roots = collector.into_roots();
-    assert_eq!(roots, vec![PathBuf::from("/home/user/project/src")]);
+    assert_eq!(
+        roots,
+        vec![SourcePath::new(String::from("/home/user/project/src"))]
+    );
 }
 
 #[test]
@@ -177,8 +140,8 @@ fn collect_from_targets_multiple_distinct_roots() {
     assert_eq!(
         roots,
         vec![
-            PathBuf::from("/home/user/project/other"),
-            PathBuf::from("/home/user/project/src"),
+            SourcePath::new(String::from("/home/user/project/other")),
+            SourcePath::new(String::from("/home/user/project/src")),
         ]
     );
 }
@@ -196,7 +159,10 @@ fn collect_from_targets_multiple_targets_produces_deduped_roots() {
 
     // Assert
     let roots = collector.into_roots();
-    assert_eq!(roots, vec![PathBuf::from("/home/user/project/src")]);
+    assert_eq!(
+        roots,
+        vec![SourcePath::new(String::from("/home/user/project/src"))]
+    );
 }
 
 #[test]
@@ -242,7 +208,7 @@ fn collector_new_is_empty() {
 #[test]
 fn ensure_fallback_empty_collector_adds_src_dir() {
     // Arrange
-    let manifest_dir = PathBuf::from("/home/user/project");
+    let manifest_dir = SourcePath::new(String::from("/home/user/project"));
 
     // Act
     let mut collector = SourceRootCollector::new();
@@ -250,14 +216,17 @@ fn ensure_fallback_empty_collector_adds_src_dir() {
 
     // Assert
     let roots = collector.into_roots();
-    assert_eq!(roots, vec![PathBuf::from("/home/user/project/src")]);
+    assert_eq!(
+        roots,
+        vec![SourcePath::new(String::from("/home/user/project/src"))]
+    );
 }
 
 #[test]
 fn ensure_fallback_non_empty_collector_does_not_add_fallback() {
     // Arrange
     let target = lib_target("/home/user/project/src/lib.rs");
-    let manifest_dir = PathBuf::from("/home/user/project");
+    let manifest_dir = SourcePath::new(String::from("/home/user/project"));
     let mut collector = SourceRootCollector::new();
     collector.collect_from_targets(&[target]);
 
@@ -266,5 +235,8 @@ fn ensure_fallback_non_empty_collector_does_not_add_fallback() {
 
     // Assert
     let roots = collector.into_roots();
-    assert_eq!(roots, vec![PathBuf::from("/home/user/project/src")]);
+    assert_eq!(
+        roots,
+        vec![SourcePath::new(String::from("/home/user/project/src"))]
+    );
 }

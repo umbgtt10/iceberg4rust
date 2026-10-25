@@ -3,24 +3,28 @@
 // SPDX-License-Identifier: MIT
 
 use crate::support::in_memory_source_tree::InMemorySourceTree;
+use crate::support::in_memory_workspace_reader::InMemoryWorkspaceReader;
 use iceberg4rust::invocation::config::Config;
 use iceberg4rust::invocation::runner::Runner;
-use std::path::PathBuf;
 
 #[test]
-fn run_with_a_manifest_that_does_not_exist_returns_an_error() {
+fn run_with_a_workspace_that_cannot_be_read_returns_the_error() {
     // Arrange
     let config = Config {
-        manifest_path: Some(PathBuf::from("C:\\nonexistent_path_12345\\Cargo.toml")),
         packages: vec![],
         threshold: 20.0,
         top: 20,
         json: false,
     };
+    let reader = InMemoryWorkspaceReader::failing();
+    let tree = InMemorySourceTree::new();
 
     // Act
-    let result = Runner::new(&InMemorySourceTree::new()).run(&config);
+    let result = Runner::new(&reader, &tree).run(&config);
 
     // Assert
-    assert!(result.is_err());
+    assert_eq!(
+        result.expect_err("unreadable").to_string(),
+        "failed to read Cargo metadata"
+    );
 }

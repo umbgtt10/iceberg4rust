@@ -33,7 +33,6 @@ pub struct Args {
 impl Args {
     pub fn config(&self) -> Config {
         Config {
-            manifest_path: self.manifest_path.clone(),
             packages: self.packages.clone(),
             threshold: self.threshold,
             top: self.top,

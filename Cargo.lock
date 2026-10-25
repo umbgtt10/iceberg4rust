@@ -78,8 +78,10 @@ name = "cargo-iceberg4rust"
 version = "0.3.1"
 dependencies = [
  "anyhow",
+ "cargo_metadata",
  "clap",
  "iceberg4rust-core",
+ "serde_json",
  "tempfile",
  "walkdir",
 ]
@@ -197,7 +199,6 @@ name = "iceberg4rust-core"
 version = "0.3.1"
 dependencies = [
  "anyhow",
- "cargo_metadata",
  "proc-macro2",
  "serde",
  "serde_json",

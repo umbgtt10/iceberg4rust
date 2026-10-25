@@ -13,23 +13,25 @@ use crate::invocation::package_analyzer::PackageAnalyzer;
 use crate::reporting::json_report_renderer::JsonReportRenderer;
 use crate::reporting::report_printer::ReportPrinter;
 use crate::traits::source_tree::SourceTree;
+use crate::traits::workspace_reader::WorkspaceReader;
 
 const OFFENDERS_FOUND: u8 = 2;
 
 pub struct Runner<'a> {
+    resolver: ManifestResolver<'a>,
     analyzer: PackageAnalyzer<'a>,
 }
 
 impl<'a> Runner<'a> {
-    pub fn new(source_tree: &'a dyn SourceTree) -> Self {
+    pub fn new(workspace_reader: &'a dyn WorkspaceReader, source_tree: &'a dyn SourceTree) -> Self {
         Self {
+            resolver: ManifestResolver::new(workspace_reader),
             analyzer: PackageAnalyzer::new(source_tree, Analyzer::new()),
         }
     }
 
     pub fn run(&self, config: &Config) -> Result<ExitCode> {
-        let resolver = ManifestResolver::new(config.clone());
-        let packages = resolver.resolve_packages()?;
+        let packages = self.resolver.resolve_packages(config)?;
 
         let mut reports = Vec::new();
         for package in &packages {

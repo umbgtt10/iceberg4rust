@@ -27,9 +27,26 @@ for stern4rust's coming `records-and-objects` rule.
   there. Both crates share the workspace's version.
 - `invocation::args::Args` moves to `iceberg4rust_cli::invocation::args::Args`
   and gains `config()`, the `Config` the core reads.
-- `invocation::runner::Runner::run(Args)` is `Runner::new(&dyn SourceTree)`
-  then `run(&self, &Config)`; the argv fix-up, the parsing and the choice of
-  the real file system are `iceberg4rust_cli::invocation::entry_point::EntryPoint`'s.
+- `invocation::runner::Runner::run(Args)` is `Runner::new(&dyn WorkspaceReader,
+  &dyn SourceTree)` then `run(&self, &Config)`; the argv fix-up, the parsing
+  and the choice of cargo and the real file system are
+  `iceberg4rust_cli::invocation::entry_point::EntryPoint`'s.
+- The core no longer reads cargo metadata: the new port
+  `traits::workspace_reader::WorkspaceReader` describes the workspace in the
+  core's own records -- `workspace::{workspace_description::WorkspaceDescription,
+  package_description::PackageDescription, target_description::TargetDescription}`
+  -- and fails with `workspace::workspace_read_failure::WorkspaceReadFailure`.
+  `iceberg4rust_cli::system::cargo_workspace_reader::CargoWorkspaceReader`
+  implements it over `cargo metadata --no-deps`; its `translate` maps
+  cargo_metadata's `Metadata`. `ManifestResolver::new(Config)` is
+  `new(&dyn WorkspaceReader)`, `resolve_packages(&self)` is
+  `resolve_packages(&self, &Config)`, `is_production_target` takes a
+  `TargetDescription`, `select_packages` a `WorkspaceDescription` (returning
+  `PackageDescription`s), and `SourceRootCollector::collect_from_targets` a
+  `&[TargetDescription]`.
+- `Config` loses `manifest_path`: the manifest path is
+  `CargoWorkspaceReader::new`'s and never enters the core, so a manifest path
+  that is not UTF-8 works as before.
 - `analysis::source_file_walker::SourceFileWalker` is gone: the new port
   `traits::source_tree::SourceTree` (`rust_files`, `read_source`) is
   implemented on disk by `iceberg4rust_cli::system::walkdir_source_tree::WalkdirSourceTree`.
