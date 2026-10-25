@@ -106,8 +106,12 @@ Pinned at 1.14.0, as CI installs it.
 
 dry4rust runs **third** for the same reason stern4rust is first: removing a
 duplicate moves code between files, which changes what the three behind it
-measure. It scans `core/src` only -- tests repeat their arrangement by design --
-and checks with zero ceilings against `dry4rust-baseline.json`, the duplication
+measure. It makes one run over the workspace with the trees it must not judge
+excluded -- `xtask`, which is not published, and every `tests/`, which repeat
+their arrangement by design -- each by its full path, since dry4rust matches an
+exclusion as a substring of a file's path and a bare `tests` would also match a
+checkout under a directory of that name. It checks with zero ceilings against
+`dry4rust-baseline.json`, the duplication
 already there when the gate arrived. So it fails on what a change adds, not on
 what it inherited; a duplicate removed is admitted, a copy added to a recorded
 group is not.
@@ -123,7 +127,7 @@ sameness is the signature's rather than a copy.
 
 Re-record the baseline only to drop groups that are gone, never to admit new
 ones, and at the same floor -- a baseline matches only at the floor it was
-recorded at: `cargo dry4rust --path core/src --min-nodes 25 --baseline "$PWD/dry4rust-baseline.json" baseline`.
+recorded at: `cargo dry4rust --path "$PWD" --exclude "$PWD/xtask" --exclude "$PWD/core/tests" --min-nodes 25 --baseline "$PWD/dry4rust-baseline.json" baseline`.
 
 `cargo install just`
 `cargo install cargo-stern4rust`
