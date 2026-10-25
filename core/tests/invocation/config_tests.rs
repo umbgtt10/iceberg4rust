@@ -13,6 +13,7 @@ fn config_clone_produces_independent_copy() {
         packages: vec!["foo".to_string()],
         threshold: 10.0,
         top: 5,
+        json: false,
     };
 
     // Act

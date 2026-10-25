@@ -1,0 +1,34 @@
+[package]
+name = "cargo-iceberg4rust"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Cargo subcommand that measures how much private implementation a Rust source file hides beneath its public surface"
+readme = "../README.md"
+documentation = "https://docs.rs/cargo-iceberg4rust"
+keywords = ["cargo", "subcommand", "metrics", "complexity", "cli"]
+categories = ["development-tools::cargo-plugins", "development-tools", "command-line-utilities"]
+
+autotests = false
+
+[lib]
+name = "iceberg4rust_cli"
+
+[[bin]]
+name = "cargo-iceberg4rust"
+path = "src/main.rs"
+
+[[test]]
+name = "all_tests"
+path = "tests/all_tests.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+iceberg4rust-core = { workspace = true }

@@ -66,8 +66,8 @@ core's tests only.
 | # | slice | status |
 |---|---|---|
 | S0 | this record | **landed** (`6bf2acd`) |
-| S1 | `DryGate`: one run over the workspace, with the trees it must not judge excluded by full path | **landed** |
-| S2 | the split: `cli` takes `main.rs`, `Args` and a new `EntryPoint`; core is renamed; one workspace version; `[workspace.lints]` forbids unsafe code | |
+| S1 | `DryGate`: one run over the workspace, with the trees it must not judge excluded by full path | **landed** (`49a92c8`) |
+| S2 | the split: `cli` takes `main.rs`, `Args` and a new `EntryPoint`; core is renamed; one workspace version; `[workspace.lints]` forbids unsafe code | **landed**. `Config` gains `json` until S5 takes the format into the renderer |
 | S3 | the `SourceTree` port, `SourcePath`, `PackageAnalyzer`; the walker becomes cli's `WalkdirSourceTree` | |
 | S4 | the `WorkspaceReader` port and core's workspace records; `CargoWorkspaceReader` in cli | |
 | S5 | the `ReportRenderer` port: report selection in core, the text report in core, the JSON report in cli; serde leaves core | |

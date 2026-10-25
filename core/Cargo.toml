@@ -1,34 +1,32 @@
 [package]
-name = "cargo-iceberg4rust"
-version = "0.3.1"
+name = "iceberg4rust-core"
+version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Cargo subcommand that measures how much private implementation a Rust source file hides beneath its public surface"
-readme = "../README.md"
-documentation = "https://docs.rs/cargo-iceberg4rust"
-keywords = ["cargo", "subcommand", "metrics", "complexity", "cli"]
-categories = ["development-tools::cargo-plugins", "development-tools", "command-line-utilities"]
+description = "The analysis behind cargo-iceberg4rust: how much private implementation a Rust source file hides beneath its public surface"
+readme = "README.md"
+documentation = "https://docs.rs/iceberg4rust-core"
+keywords = ["metrics", "complexity", "static-analysis"]
+categories = ["development-tools"]
 
 autotests = false
 
 [lib]
 name = "iceberg4rust"
 
-[[bin]]
-name = "cargo-iceberg4rust"
-path = "src/main.rs"
-
 [[test]]
 name = "all_tests"
 path = "tests/all_tests.rs"
 
+[lints]
+workspace = true
+
 [dependencies]
 anyhow = { workspace = true }
 cargo_metadata = { workspace = true }
-clap = { workspace = true }
 proc-macro2 = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -36,7 +34,6 @@ syn = { workspace = true }
 walkdir = { workspace = true }
 
 [dev-dependencies]
-clap = { workspace = true }
 serde_json = { workspace = true }
 syn = { workspace = true }
 tempfile = { workspace = true }

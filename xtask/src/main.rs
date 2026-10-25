@@ -17,11 +17,12 @@ use xtask::gates::stern_gate::SternGate;
 use xtask::gates::twin_gate::TwinGate;
 use xtask::process::system_command_runner::SystemCommandRunner;
 
-const CORE_PACKAGE: &str = "cargo-iceberg4rust";
+const CLI_PACKAGE: &str = "cargo-iceberg4rust";
+const CORE_PACKAGE: &str = "iceberg4rust-core";
 const XTASK_PACKAGE: &str = "xtask";
 const CRAP_THRESHOLD: &str = "15";
 const SELF_GATE_THRESHOLD: &str = "9.5";
-const DRY_EXCLUDES: [&[&str]; 2] = [&["xtask"], &["core", "tests"]];
+const DRY_EXCLUDES: [&[&str]; 3] = [&["xtask"], &["core", "tests"], &["cli", "tests"]];
 const DRY_BASELINE: &str = "dry4rust-baseline.json";
 const DRY_MIN_NODES: &str = "25";
 
@@ -42,8 +43,12 @@ fn run_stage2() -> ExitCode {
     let runner = SystemCommandRunner::new();
     let parser = CrapReportParser::new();
 
-    // Both members, so the crate that enforces the bar is held to it too.
-    let packages = vec![String::from(CORE_PACKAGE), String::from(XTASK_PACKAGE)];
+    // Every member, so the crate that enforces the bar is held to it too.
+    let packages = vec![
+        String::from(CORE_PACKAGE),
+        String::from(CLI_PACKAGE),
+        String::from(XTASK_PACKAGE),
+    ];
 
     let stern = SternGate::new(&runner, manifest_path.clone(), packages.clone());
 
@@ -54,8 +59,8 @@ fn run_stage2() -> ExitCode {
 
     // Third, for the same reason stern4rust is first: removing a duplicate
     // moves code between files, which changes what the three behind it measure.
-    // One run over the workspace with the published crate's source in it and
-    // nothing else -- tests repeat their arrangement by design, and xtask is not
+    // One run over both published crates' sources, so a copy from one into the
+    // other is seen -- tests repeat their arrangement by design, and xtask is not
     // published -- with zero ceilings against a baseline of what was already
     // duplicated when the gate arrived, so it fails on what a change adds.
     let root = workspace_root();
@@ -81,7 +86,7 @@ fn run_stage2() -> ExitCode {
     let self_gate = SelfGate::new(
         &runner,
         manifest_path,
-        String::from(CORE_PACKAGE),
+        String::from(CLI_PACKAGE),
         packages,
         String::from(SELF_GATE_THRESHOLD),
     );

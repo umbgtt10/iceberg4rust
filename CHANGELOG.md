@@ -6,11 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-The tool's behaviour, command line and scoring are unchanged. One `pub` free
-function became an associated function, for stern4rust 0.17.0's new
-`owned-functions` rule -- a file with a subject holds no free function. `Args`
-and `FileRiskReport` no longer expose their fields, for stern4rust's coming
-`records-and-objects` rule.
+The tool's behaviour, command line and scoring are unchanged: its stdout,
+stderr and exit codes are compared byte for byte against 0.3.1. The
+repository splits into a technology-free core and a cli crate
+(`docs/CORE_CLI_SPLIT.md`), which changes how the library is packaged and
+much of its API. One `pub` free function became an associated function, for
+stern4rust 0.17.0's new `owned-functions` rule -- a file with a subject holds
+no free function. `Args` and `FileRiskReport` no longer expose their fields,
+for stern4rust's coming `records-and-objects` rule.
+
+### Changed (packages)
+- `cargo-iceberg4rust` is now the command-line crate (`cli/`): the
+  `cargo-iceberg4rust` binary and a library, `iceberg4rust_cli`. The analysis
+  library `iceberg4rust` is published by a new package, `iceberg4rust-core`
+  (`core/`); a dependent replaces `cargo-iceberg4rust` with
+  `iceberg4rust-core`, and paths under `iceberg4rust::` stay for what remains
+  there. Both crates share the workspace's version.
+- `invocation::args::Args` moves to `iceberg4rust_cli::invocation::args::Args`
+  and gains `config()`, the `Config` the core reads.
+- `invocation::runner::Runner::run` takes `&Config` instead of `Args`; the
+  argv fix-up and the parsing are `iceberg4rust_cli::invocation::entry_point::EntryPoint`'s.
+- `Config` gains `json: bool`.
 
 ### Changed
 - `analysis::struct_usage_collector::collect_used_private_structs` is

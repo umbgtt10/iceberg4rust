@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: MIT
 
 pub mod analyzer;
-pub mod args;
 pub mod config;
 pub mod manifest_resolver;
 pub mod package_context;

@@ -6,6 +6,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use clap::Parser;
+use iceberg4rust::invocation::config::Config;
 
 #[derive(Debug, Parser)]
 #[command(name = "cargo-iceberg4rust")]
@@ -30,6 +31,16 @@ pub struct Args {
 }
 
 impl Args {
+    pub fn config(&self) -> Config {
+        Config {
+            manifest_path: self.manifest_path.clone(),
+            packages: self.packages.clone(),
+            threshold: self.threshold,
+            top: self.top,
+            json: self.json,
+        }
+    }
+
     pub fn json(&self) -> bool {
         self.json
     }

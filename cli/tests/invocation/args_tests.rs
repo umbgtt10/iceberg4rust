@@ -3,10 +3,37 @@
 // SPDX-License-Identifier: MIT
 
 use clap::Parser;
-use iceberg4rust::invocation::args::Args;
+use iceberg4rust_cli::invocation::args::Args;
 
 fn raw(parts: &[&str]) -> Vec<String> {
     parts.iter().map(|part| (*part).to_string()).collect()
+}
+
+#[test]
+fn config_carries_the_options_the_core_reads() {
+    // Arrange
+    let args = Args::parse_from([
+        "cargo-iceberg4rust",
+        "--package",
+        "pkg_a",
+        "--package",
+        "pkg_b",
+        "--threshold",
+        "8.0",
+        "--top",
+        "5",
+    ]);
+
+    // Act
+    let config = args.config();
+
+    // Assert
+    assert_eq!(
+        config.packages,
+        vec![String::from("pkg_a"), String::from("pkg_b")]
+    );
+    assert!((config.threshold - 8.0).abs() < f64::EPSILON);
+    assert_eq!(config.top, 5);
 }
 
 #[test]

@@ -212,9 +212,10 @@ fn resolve_packages_against_this_package_returns_it_with_its_source_root() {
     // Arrange
     let config = Config {
         manifest_path: Some(PathBuf::from("Cargo.toml")),
-        packages: vec![String::from("cargo-iceberg4rust")],
+        packages: vec![String::from("iceberg4rust-core")],
         threshold: 15.0,
         top: 10,
+        json: false,
     };
     let resolver = ManifestResolver::new(config);
 
@@ -223,7 +224,7 @@ fn resolve_packages_against_this_package_returns_it_with_its_source_root() {
 
     // Assert
     assert_eq!(packages.len(), 1);
-    assert_eq!(packages[0].name, "cargo-iceberg4rust");
+    assert_eq!(packages[0].name, "iceberg4rust-core");
     assert!(!packages[0].source_roots.is_empty());
 }
 
