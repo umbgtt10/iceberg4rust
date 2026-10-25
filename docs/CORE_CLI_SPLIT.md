@@ -72,8 +72,8 @@ core's tests only.
 | S4 | the `WorkspaceReader` port and core's workspace records; `CargoWorkspaceReader` in cli | **landed** (`0fbeaf1`). The manifest path stays in cli: `Config` loses it |
 | S5 | the `ReportRenderer` port: report selection in core, the text report in core, the JSON report in cli; serde leaves core | **landed** (`e18ff8f`). `Config` loses `json`: the renderer is the format |
 | S6 | `#![no_std]`: alloc imports, `libm`, typed errors; anyhow leaves core | **landed** (`bd9397d`) |
-| S7 | the technology-free gate, first in stage 2 | **landed**. A crate declared in two sections is named once |
-| S8 | `.cargo/mutants.toml` | |
+| S7 | the technology-free gate, first in stage 2 | **landed** (`1da1b5d`). A crate declared in two sections is named once |
+| S8 | `.cargo/mutants.toml` | **landed**. `cargo mutants --list`: 325 mutants, all in `iceberg4rust-core` |
 | S9 | docs, and this record moves to `docs/history/` | |
 
 ## Tests that move

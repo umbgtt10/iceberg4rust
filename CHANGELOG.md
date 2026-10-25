@@ -93,6 +93,8 @@ for stern4rust's coming `records-and-objects` rule.
   `core/src` or `core/tests` may reach `std::{env,fs,io,net,os,process}`, the
   printing macros, the file-system methods of `Path` or `extern crate std`.
   dry4rust makes one run over both published crates' sources.
+- `.cargo/mutants.toml` scopes cargo-mutants to `core/src`, each mutant
+  tested by core's own tests: 325 mutants.
 
 ### Changed
 - `analysis::struct_usage_collector::collect_used_private_structs` is
