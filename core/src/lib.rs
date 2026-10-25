@@ -7,3 +7,5 @@
 pub mod analysis;
 pub mod invocation;
 pub mod reporting;
+pub mod traits;
+pub mod workspace;

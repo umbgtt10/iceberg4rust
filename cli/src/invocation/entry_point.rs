@@ -9,9 +9,11 @@ use clap::Parser;
 use iceberg4rust::invocation::runner::Runner;
 
 use crate::invocation::args::Args;
+use crate::system::walkdir_source_tree::WalkdirSourceTree;
 
 // The composition root: the command line in, an exit code out. Cargo's own
-// argv fix-up and the argument parsing are this crate's; the run is core's.
+// argv fix-up, the argument parsing and the real file system are this crate's;
+// the run is core's.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct EntryPoint;
 
@@ -25,6 +27,7 @@ impl EntryPoint {
         I: IntoIterator<Item = String>,
     {
         let args = Args::parse_from(Args::without_cargo_subcommand(argv));
-        Runner::run(&args.config())
+        let source_tree = WalkdirSourceTree::new();
+        Runner::new(&source_tree).run(&args.config())
     }
 }

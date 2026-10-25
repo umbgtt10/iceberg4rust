@@ -3,8 +3,6 @@
 // SPDX-License-Identifier: MIT
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
-use std::path::Path;
 
 use anyhow::{Context, Result};
 use syn::{File, Item, parse_file};
@@ -13,13 +11,8 @@ use crate::analysis::comment_stripper::CommentStripper;
 use crate::analysis::helper_struct_kind::HelperStructKind;
 use crate::analysis::private_function_collector::PrivateFunctionCollector;
 use crate::analysis::private_helper_classifier::PrivateHelperClassifier;
-use crate::analysis::source_file_walker::SourceFileWalker;
-use crate::invocation::manifest_resolver::ManifestResolver;
-use crate::invocation::package_context::PackageContext;
 use crate::reporting::file_metrics::FileMetrics;
-use crate::reporting::file_risk_report::FileRiskReport;
 use crate::reporting::private_function_report::PrivateFunctionReport;
-use crate::reporting::risk_ordering::RiskOrdering;
 
 #[derive(Default)]
 pub struct Analyzer;
@@ -30,15 +23,6 @@ impl Analyzer {
 
     pub fn new() -> Self {
         Self
-    }
-
-    pub fn analyze_package(&self, package: &PackageContext) -> Result<Vec<FileRiskReport>> {
-        let mut reports = Vec::new();
-        for source_root in &package.source_roots {
-            reports.extend(self.analyze_source_root(source_root, package)?);
-        }
-        reports.sort_by(RiskOrdering::descending);
-        Ok(reports)
     }
 
     pub fn analyze_source(&self, source: &str) -> Result<FileMetrics> {
@@ -123,45 +107,6 @@ impl Analyzer {
                 + 0.5 * private_complexity
                 + Self::DATA_STRUCT_WEIGHT * (data_private_struct_count as f64)
                 + Self::BEHAVIORAL_STRUCT_WEIGHT * (behavioral_private_struct_count as f64))
-    }
-
-    fn analyze_source_file(
-        &self,
-        file_path: &Path,
-        package: &PackageContext,
-    ) -> Result<Option<FileRiskReport>> {
-        let relative = ManifestResolver::relative_file(&package.manifest_dir, file_path);
-        if !ManifestResolver::is_production_relative_file(&relative) {
-            return Ok(None);
-        }
-
-        let source = fs::read_to_string(file_path)
-            .with_context(|| format!("failed to read source file {}", file_path.display()))?;
-        let metrics = self.analyze_source(&source)?;
-        if metrics.risk_score <= f64::EPSILON {
-            return Ok(None);
-        }
-
-        Ok(Some(FileRiskReport::new(
-            package.name.clone(),
-            relative,
-            metrics,
-        )))
-    }
-
-    fn analyze_source_root(
-        &self,
-        source_root: &Path,
-        package: &PackageContext,
-    ) -> Result<Vec<FileRiskReport>> {
-        if !source_root.exists() {
-            return Ok(Vec::new());
-        }
-
-        SourceFileWalker::walk(source_root)
-            .iter()
-            .filter_map(|file_path| self.analyze_source_file(file_path, package).transpose())
-            .collect()
     }
 
     fn first_struct_name(syntax: &File) -> Option<String> {

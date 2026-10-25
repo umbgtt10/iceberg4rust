@@ -2,6 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use crate::support::in_memory_source_tree::InMemorySourceTree;
 use iceberg4rust::invocation::config::Config;
 use iceberg4rust::invocation::runner::Runner;
 use std::path::PathBuf;
@@ -18,7 +19,7 @@ fn run_with_a_manifest_that_does_not_exist_returns_an_error() {
     };
 
     // Act
-    let result = Runner::run(&config);
+    let result = Runner::new(&InMemorySourceTree::new()).run(&config);
 
     // Assert
     assert!(result.is_err());

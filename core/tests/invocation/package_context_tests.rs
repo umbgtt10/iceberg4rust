@@ -3,15 +3,18 @@
 // SPDX-License-Identifier: MIT
 
 use iceberg4rust::invocation::package_context::PackageContext;
-use std::path::PathBuf;
+use iceberg4rust::workspace::source_path::SourcePath;
 
 #[test]
 fn package_context_clone_produces_independent_copy() {
     // Arrange
     let ctx = PackageContext {
         name: "pkg".to_string(),
-        manifest_dir: PathBuf::from("/a"),
-        source_roots: vec![PathBuf::from("/a/src"), PathBuf::from("/a/tests")],
+        manifest_dir: SourcePath::new(String::from("/a")),
+        source_roots: vec![
+            SourcePath::new(String::from("/a/src")),
+            SourcePath::new(String::from("/a/tests")),
+        ],
     };
 
     // Act

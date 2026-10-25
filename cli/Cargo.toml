@@ -32,3 +32,7 @@ workspace = true
 anyhow = { workspace = true }
 clap = { workspace = true }
 iceberg4rust-core = { workspace = true }
+walkdir = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

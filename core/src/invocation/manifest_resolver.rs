@@ -2,7 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::path::{Path, PathBuf};
+use std::path::{MAIN_SEPARATOR, Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
 use cargo_metadata::{Metadata, MetadataCommand, Package, Target};
@@ -10,6 +10,7 @@ use cargo_metadata::{Metadata, MetadataCommand, Package, Target};
 use crate::analysis::source_root_collector::SourceRootCollector;
 use crate::invocation::config::Config;
 use crate::invocation::package_context::PackageContext;
+use crate::workspace::source_path::SourcePath;
 
 pub struct ManifestResolver {
     config: Config,
@@ -49,11 +50,10 @@ impl ManifestResolver {
         })
     }
 
-    pub fn relative_file(base_dir: &Path, file_path: &Path) -> String {
+    pub fn relative_file(base_dir: &SourcePath, file_path: &SourcePath) -> String {
         file_path
             .strip_prefix(base_dir)
-            .unwrap_or(file_path)
-            .to_string_lossy()
+            .unwrap_or(file_path.as_str())
             .replace('\\', "/")
     }
 
@@ -114,8 +114,23 @@ impl ManifestResolver {
 
         Ok(PackageContext {
             name: package.name.to_string(),
-            manifest_dir,
-            source_roots: collector.into_roots(),
+            manifest_dir: Self::source_path(&manifest_dir),
+            source_roots: collector
+                .into_roots()
+                .iter()
+                .map(|root| Self::source_path(root))
+                .collect(),
         })
+    }
+
+    // cargo's paths are UTF-8, so nothing is lost; the platform's separator
+    // becomes the core's `/`.
+    fn source_path(path: &Path) -> SourcePath {
+        let text = path.to_string_lossy();
+        if MAIN_SEPARATOR == '\\' {
+            SourcePath::new(text.replace('\\', "/"))
+        } else {
+            SourcePath::new(text.into_owned())
+        }
     }
 }

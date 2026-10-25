@@ -6,8 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-The tool's behaviour, command line and scoring are unchanged: its stdout,
-stderr and exit codes are compared byte for byte against 0.3.1. The
+The tool's behaviour, command line and scoring are unchanged -- its stdout,
+stderr and exit codes are compared byte for byte against 0.3.1 -- with one
+exception: a `.rs` file whose path is not UTF-8 now fails the run, naming the
+file, where 0.3.1 scored it under a lossy name. Such a file cannot be a `mod`
+(identifiers are UTF-8), only a `#[path]` target. The
 repository splits into a technology-free core and a cli crate
 (`docs/CORE_CLI_SPLIT.md`), which changes how the library is packaged and
 much of its API. One `pub` free function became an associated function, for
@@ -24,8 +27,18 @@ for stern4rust's coming `records-and-objects` rule.
   there. Both crates share the workspace's version.
 - `invocation::args::Args` moves to `iceberg4rust_cli::invocation::args::Args`
   and gains `config()`, the `Config` the core reads.
-- `invocation::runner::Runner::run` takes `&Config` instead of `Args`; the
-  argv fix-up and the parsing are `iceberg4rust_cli::invocation::entry_point::EntryPoint`'s.
+- `invocation::runner::Runner::run(Args)` is `Runner::new(&dyn SourceTree)`
+  then `run(&self, &Config)`; the argv fix-up, the parsing and the choice of
+  the real file system are `iceberg4rust_cli::invocation::entry_point::EntryPoint`'s.
+- `analysis::source_file_walker::SourceFileWalker` is gone: the new port
+  `traits::source_tree::SourceTree` (`rust_files`, `read_source`) is
+  implemented on disk by `iceberg4rust_cli::system::walkdir_source_tree::WalkdirSourceTree`.
+- `invocation::analyzer::Analyzer::analyze_package` moves to
+  `invocation::package_analyzer::PackageAnalyzer::new(&dyn SourceTree, Analyzer).analyze_package`.
+- Paths in the library are `workspace::source_path::SourcePath`, text with `/`
+  as its only separator: `PackageContext`'s `manifest_dir` and `source_roots`,
+  and `ManifestResolver::relative_file(&SourcePath, &SourcePath)`. A file the
+  tree cannot list or read fails with `workspace::source_read_failure::SourceReadFailure`.
 - `Config` gains `json: bool`.
 
 ### Changed

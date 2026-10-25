@@ -5,3 +5,5 @@
 mod analysis;
 mod invocation;
 mod reporting;
+mod support;
+mod workspace;

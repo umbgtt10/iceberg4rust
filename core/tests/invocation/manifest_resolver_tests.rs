@@ -6,10 +6,14 @@ use cargo_metadata::Metadata;
 use cargo_metadata::Target;
 use iceberg4rust::invocation::config::Config;
 use iceberg4rust::invocation::manifest_resolver::ManifestResolver;
+use iceberg4rust::workspace::source_path::SourcePath;
 use serde_json::from_value;
 use serde_json::json;
-use std::path::Path;
 use std::path::PathBuf;
+
+fn path(text: &str) -> SourcePath {
+    SourcePath::new(String::from(text))
+}
 
 fn target_of_kind(kind: &str) -> Target {
     from_value(json!({
@@ -149,30 +153,27 @@ fn is_production_target_for_a_test_returns_false() {
 #[test]
 fn relative_file_inside_base_dir_strips_prefix() {
     // Arrange
-    let base_dir = Path::new("/home/user/project");
-    let file_path = Path::new("/home/user/project/src/lib.rs");
+    let base_dir = path("/home/user/project");
+    let file_path = path("/home/user/project/src/lib.rs");
 
     // Act
-    let relative = ManifestResolver::relative_file(base_dir, file_path);
+    let relative = ManifestResolver::relative_file(&base_dir, &file_path);
 
     // Assert
     assert_eq!(relative, "src/lib.rs");
 }
 
-// `\` is a path separator on Windows but an ordinary filename byte on Unix,
-// so a `join()` argument that contains one lands differently on each: on
-// Windows it splits into an extra component before stripping; on Unix it
-// survives as part of one component's name. Either way the component(s)
-// left after strip_prefix carry a literal `\` into the same replace('\\',
-// "/") line, so this exercises normalization on every OS with one test.
+// A `\` that reaches the core is part of a name -- the edge has already turned
+// every separator into `/` -- so it survives the strip as part of one
+// component and the same replace('\\', "/") line normalises it, on every OS.
 #[test]
 fn relative_file_normalizes_backslashes_to_forward_slashes() {
     // Arrange
-    let base_dir = Path::new("project");
+    let base_dir = path("project");
     let file_path = base_dir.join("weird\\name.rs");
 
     // Act
-    let relative = ManifestResolver::relative_file(base_dir, &file_path);
+    let relative = ManifestResolver::relative_file(&base_dir, &file_path);
 
     // Assert
     assert_eq!(relative, "weird/name.rs");
@@ -182,11 +183,11 @@ fn relative_file_normalizes_backslashes_to_forward_slashes() {
 #[test]
 fn relative_file_outside_base_dir_returns_full_path() {
     // Arrange
-    let base_dir = Path::new("/home/user/project");
-    let file_path = Path::new("/tmp/other.rs");
+    let base_dir = path("/home/user/project");
+    let file_path = path("/tmp/other.rs");
 
     // Act
-    let relative = ManifestResolver::relative_file(base_dir, file_path);
+    let relative = ManifestResolver::relative_file(&base_dir, &file_path);
 
     // Assert
     assert_eq!(relative, "/tmp/other.rs");
@@ -195,11 +196,11 @@ fn relative_file_outside_base_dir_returns_full_path() {
 #[test]
 fn relative_file_same_path_returns_empty_string_or_dot() {
     // Arrange
-    let base_dir = Path::new("/home/user/project");
-    let file_path = Path::new("/home/user/project");
+    let base_dir = path("/home/user/project");
+    let file_path = path("/home/user/project");
 
     // Act
-    let relative = ManifestResolver::relative_file(base_dir, file_path);
+    let relative = ManifestResolver::relative_file(&base_dir, &file_path);
 
     // Assert
     // strip_prefix("/home/user/project", "/home/user/project") yields ""

@@ -80,6 +80,8 @@ dependencies = [
  "anyhow",
  "clap",
  "iceberg4rust-core",
+ "tempfile",
+ "walkdir",
 ]
 
 [[package]]
@@ -200,8 +202,6 @@ dependencies = [
  "serde",
  "serde_json",
  "syn 2.0.119",
- "tempfile",
- "walkdir",
 ]
 
 [[package]]

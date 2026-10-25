@@ -5,5 +5,6 @@
 pub mod analyzer;
 pub mod config;
 pub mod manifest_resolver;
+pub mod package_analyzer;
 pub mod package_context;
 pub mod runner;
