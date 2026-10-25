@@ -70,8 +70,8 @@ core's tests only.
 | S2 | the split: `cli` takes `main.rs`, `Args` and a new `EntryPoint`; core is renamed; one workspace version; `[workspace.lints]` forbids unsafe code | **landed** (`8e45b08`). `Config` gains `json` until S5 takes the format into the renderer |
 | S3 | the `SourceTree` port, `SourcePath`, `PackageAnalyzer`; the walker becomes cli's `WalkdirSourceTree` | **landed** (`13d4ee8`). Until S4 the resolver itself turns cargo's paths into `SourcePath`s |
 | S4 | the `WorkspaceReader` port and core's workspace records; `CargoWorkspaceReader` in cli | **landed** (`0fbeaf1`). The manifest path stays in cli: `Config` loses it |
-| S5 | the `ReportRenderer` port: report selection in core, the text report in core, the JSON report in cli; serde leaves core | **landed**. `Config` loses `json`: the renderer is the format |
-| S6 | `#![no_std]`: alloc imports, `libm`, typed errors; anyhow leaves core | |
+| S5 | the `ReportRenderer` port: report selection in core, the text report in core, the JSON report in cli; serde leaves core | **landed** (`e18ff8f`). `Config` loses `json`: the renderer is the format |
+| S6 | `#![no_std]`: alloc imports, `libm`, typed errors; anyhow leaves core | **landed** |
 | S7 | the technology-free gate, first in stage 2 | |
 | S8 | `.cargo/mutants.toml` | |
 | S9 | docs, and this record moves to `docs/history/` | |

@@ -2,7 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::collections::{BTreeMap, BTreeSet};
+use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::string::{String, ToString};
 
 use syn::visit::{Visit, visit_expr_call, visit_expr_struct, visit_type_path};
 use syn::{Block, Expr, ExprCall, ExprStruct, Path, ReturnType, Signature, TypePath};

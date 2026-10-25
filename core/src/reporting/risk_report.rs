@@ -2,6 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use alloc::vec::Vec;
+
 use crate::reporting::file_risk_report::FileRiskReport;
 
 // What a renderer is handed: the run's numbers and its files already chosen and

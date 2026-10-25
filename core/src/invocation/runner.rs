@@ -2,12 +2,13 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use anyhow::Result;
+use alloc::vec::Vec;
 
 use crate::invocation::analyzer::Analyzer;
 use crate::invocation::config::Config;
 use crate::invocation::manifest_resolver::ManifestResolver;
 use crate::invocation::package_analyzer::PackageAnalyzer;
+use crate::invocation::run_failure::RunFailure;
 use crate::invocation::run_outcome::RunOutcome;
 use crate::reporting::report_selection::ReportSelection;
 use crate::traits::report_renderer::ReportRenderer;
@@ -37,7 +38,7 @@ impl<'a> Runner<'a> {
     // caller that reads only `has_offenders` and one that reads the output can
     // never disagree. Printing it, and turning it into an exit code, is the
     // caller's.
-    pub fn run(&self, config: &Config) -> Result<RunOutcome> {
+    pub fn run(&self, config: &Config) -> Result<RunOutcome, RunFailure> {
         let packages = self.resolver.resolve_packages(config)?;
 
         let mut reports = Vec::new();

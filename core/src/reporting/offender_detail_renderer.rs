@@ -2,7 +2,9 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::fmt::Write;
+use alloc::string::String;
+use alloc::vec::Vec;
+use core::fmt::Write;
 
 use crate::reporting::file_risk_report::FileRiskReport;
 use crate::reporting::private_function_report::PrivateFunctionReport;

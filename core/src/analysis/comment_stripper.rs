@@ -2,6 +2,9 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use alloc::string::String;
+use alloc::vec::Vec;
+
 const LINE_COMMENT_START: [char; 2] = ['/', '/'];
 const BLOCK_COMMENT_START: [char; 2] = ['/', '*'];
 const BLOCK_COMMENT_END: [char; 2] = ['*', '/'];

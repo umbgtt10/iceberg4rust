@@ -2,15 +2,18 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::collections::{BTreeMap, BTreeSet};
+use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 
-use anyhow::{Context, Result};
+use libm::log2;
 use syn::{File, Item, parse_file};
 
 use crate::analysis::comment_stripper::CommentStripper;
 use crate::analysis::helper_struct_kind::HelperStructKind;
 use crate::analysis::private_function_collector::PrivateFunctionCollector;
 use crate::analysis::private_helper_classifier::PrivateHelperClassifier;
+use crate::invocation::parse_failure::ParseFailure;
 use crate::reporting::file_metrics::FileMetrics;
 use crate::reporting::private_function_report::PrivateFunctionReport;
 
@@ -25,8 +28,8 @@ impl Analyzer {
         Self
     }
 
-    pub fn analyze_source(&self, source: &str) -> Result<FileMetrics> {
-        let syntax = parse_file(source).context("failed to parse Rust source")?;
+    pub fn analyze_source(&self, source: &str) -> Result<FileMetrics, ParseFailure> {
+        let syntax = parse_file(source).map_err(|cause| ParseFailure { cause })?;
 
         let effective_loc = CommentStripper::count_effective_loc(source);
         let primary_struct = Self::first_struct_name(&syntax);
@@ -99,7 +102,7 @@ impl Analyzer {
         // falls out of the formula when every term is zero, as SPEC.md states,
         // and short-circuiting on P alone would discard the complexity of a
         // trait impl — which no longer counts toward P but is still burden.
-        let size_factor = ((effective_loc + 1) as f64).log2() / 10.0;
+        let size_factor = log2((effective_loc + 1) as f64) / 10.0;
         let private_complexity: f64 = private_complexity_sum.into();
 
         size_factor

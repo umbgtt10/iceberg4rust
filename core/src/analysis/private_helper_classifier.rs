@@ -2,7 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::collections::BTreeMap;
+use alloc::collections::BTreeMap;
+use alloc::string::{String, ToString};
 
 use syn::{ImplItem, Item, ItemImpl, ItemMod, ItemStruct, Type, Visibility};
 

@@ -7,5 +7,7 @@ pub mod config;
 pub mod manifest_resolver;
 pub mod package_analyzer;
 pub mod package_context;
+pub mod parse_failure;
+pub mod run_failure;
 pub mod run_outcome;
 pub mod runner;

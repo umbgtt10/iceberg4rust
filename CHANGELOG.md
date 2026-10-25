@@ -7,10 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 The tool's behaviour, command line and scoring are unchanged -- its stdout,
-stderr and exit codes are compared byte for byte against 0.3.1 -- with one
-exception: a `.rs` file whose path is not UTF-8 now fails the run, naming the
-file, where 0.3.1 scored it under a lossy name. Such a file cannot be a `mod`
-(identifiers are UTF-8), only a `#[path]` target. The
+stderr and exit codes are compared byte for byte against 0.3.1 -- with two
+exceptions. A `.rs` file whose path is not UTF-8 now fails the run, naming the
+file, where 0.3.1 scored it under a lossy name; such a file cannot be a `mod`
+(identifiers are UTF-8), only a `#[path]` target. And `log2` comes from `libm`,
+since the core has no `std`: for 54 file sizes up to 100,000 effective lines,
+the first at 1,374, its last bit differs from the platform's, which can change
+the last digits of `risk_score` and `total_risk` in `--json`; no text report
+changes. The
 repository splits into a technology-free core and a cli crate
 (`docs/CORE_CLI_SPLIT.md`), which changes how the library is packaged and
 much of its API. One `pub` free function became an associated function, for
@@ -29,7 +33,7 @@ for stern4rust's coming `records-and-objects` rule.
   and gains `config()`, the `Config` the core reads.
 - `invocation::runner::Runner::run(Args) -> Result<ExitCode>` is
   `Runner::new(&dyn WorkspaceReader, &dyn SourceTree, &dyn ReportRenderer)`
-  then `run(&self, &Config) -> Result<invocation::run_outcome::RunOutcome>`:
+  then `run(&self, &Config) -> Result<invocation::run_outcome::RunOutcome, RunFailure>`:
   the report as text and the verdict, `has_offenders`. The argv fix-up, the
   parsing, the choice of cargo, the real file system and the report's format,
   printing, and the exit code are
@@ -59,6 +63,14 @@ for stern4rust's coming `records-and-objects` rule.
   as its only separator: `PackageContext`'s `manifest_dir` and `source_roots`,
   and `ManifestResolver::relative_file(&SourcePath, &SourcePath)`. A file the
   tree cannot list or read fails with `workspace::source_read_failure::SourceReadFailure`.
+- The library is `#![no_std]` (with `alloc`) and `#![forbid(unsafe_code)]`,
+  and depends on `libm`, `proc-macro2` and `syn` only -- no anyhow, serde,
+  cargo_metadata, clap or walkdir. Its failures are typed:
+  `Analyzer::analyze_source` returns `invocation::parse_failure::ParseFailure`,
+  and `ManifestResolver::resolve_packages` and `select_packages`,
+  `PackageAnalyzer::analyze_package` and `Runner::run` return
+  `invocation::run_failure::RunFailure`, whose variants keep their cause, so
+  the chain the binary prints is unchanged.
 - `reporting::report_printer::ReportPrinter` splits in two.
   `reporting::report_selection::ReportSelection` keeps `new(threshold, top)`,
   `has_offenders` and `select_visible`, and builds the

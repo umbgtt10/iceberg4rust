@@ -25,7 +25,7 @@ path = "tests/all_tests.rs"
 workspace = true
 
 [dependencies]
-anyhow = { workspace = true }
+libm = { workspace = true }
 proc-macro2 = { workspace = true }
 syn = { workspace = true }
 

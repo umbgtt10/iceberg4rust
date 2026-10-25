@@ -2,10 +2,13 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use alloc::format;
+use alloc::string::String;
+use alloc::vec::Vec;
 use core::cmp::Ordering;
 use core::fmt;
 
-// A path held as text, so the core needs no `std::path`. `/` is its only
+// A path held as text, because the core has no `std::path`. `/` is its only
 // separator: the edge that hands paths in normalises the platform's own to it.
 // It compares by component, so `/a/b` and `/a/b/` are one path; `.` and `..`
 // are compared as written, which `std::path` would normalise -- cargo never

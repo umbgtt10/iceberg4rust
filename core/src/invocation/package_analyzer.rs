@@ -2,11 +2,12 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use anyhow::Result;
+use alloc::vec::Vec;
 
 use crate::invocation::analyzer::Analyzer;
 use crate::invocation::manifest_resolver::ManifestResolver;
 use crate::invocation::package_context::PackageContext;
+use crate::invocation::run_failure::RunFailure;
 use crate::reporting::file_risk_report::FileRiskReport;
 use crate::reporting::risk_ordering::RiskOrdering;
 use crate::traits::source_tree::SourceTree;
@@ -27,7 +28,10 @@ impl<'a> PackageAnalyzer<'a> {
         }
     }
 
-    pub fn analyze_package(&self, package: &PackageContext) -> Result<Vec<FileRiskReport>> {
+    pub fn analyze_package(
+        &self,
+        package: &PackageContext,
+    ) -> Result<Vec<FileRiskReport>, RunFailure> {
         let mut reports = Vec::new();
         for source_root in &package.source_roots {
             reports.extend(self.analyze_source_root(source_root, package)?);
@@ -40,7 +44,7 @@ impl<'a> PackageAnalyzer<'a> {
         &self,
         file_path: &SourcePath,
         package: &PackageContext,
-    ) -> Result<Option<FileRiskReport>> {
+    ) -> Result<Option<FileRiskReport>, RunFailure> {
         let relative = ManifestResolver::relative_file(&package.manifest_dir, file_path);
         if !ManifestResolver::is_production_relative_file(&relative) {
             return Ok(None);
@@ -63,7 +67,7 @@ impl<'a> PackageAnalyzer<'a> {
         &self,
         source_root: &SourcePath,
         package: &PackageContext,
-    ) -> Result<Vec<FileRiskReport>> {
+    ) -> Result<Vec<FileRiskReport>, RunFailure> {
         self.source_tree
             .rust_files(source_root)?
             .iter()

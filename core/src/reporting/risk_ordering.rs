@@ -2,7 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::cmp::Ordering;
+use core::cmp::Ordering;
 
 use crate::reporting::file_risk_report::FileRiskReport;
 

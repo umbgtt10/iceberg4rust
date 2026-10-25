@@ -2,11 +2,14 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use anyhow::{Context, Result, bail};
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
 
 use crate::analysis::source_root_collector::SourceRootCollector;
 use crate::invocation::config::Config;
 use crate::invocation::package_context::PackageContext;
+use crate::invocation::run_failure::RunFailure;
 use crate::traits::workspace_reader::WorkspaceReader;
 use crate::workspace::package_description::PackageDescription;
 use crate::workspace::source_path::SourcePath;
@@ -53,7 +56,7 @@ impl<'a> ManifestResolver<'a> {
             .replace('\\', "/")
     }
 
-    pub fn resolve_packages(&self, config: &Config) -> Result<Vec<PackageContext>> {
+    pub fn resolve_packages(&self, config: &Config) -> Result<Vec<PackageContext>, RunFailure> {
         let workspace = self.workspace_reader.describe()?;
         let packages = Self::select_packages(&workspace, &config.packages)?;
 
@@ -66,7 +69,7 @@ impl<'a> ManifestResolver<'a> {
     pub fn select_packages<'w>(
         workspace: &'w WorkspaceDescription,
         requested: &[String],
-    ) -> Result<Vec<&'w PackageDescription>> {
+    ) -> Result<Vec<&'w PackageDescription>, RunFailure> {
         if !requested.is_empty() {
             let mut selected = Vec::new();
             for package_name in requested {
@@ -74,31 +77,30 @@ impl<'a> ManifestResolver<'a> {
                     .packages
                     .iter()
                     .find(|package| &package.name == package_name)
-                    .with_context(|| {
-                        format!("package {package_name} was not found in the manifest")
-                    })?;
+                    .ok_or_else(|| RunFailure::PackageNotFound(package_name.clone()))?;
                 selected.push(package);
             }
             return Ok(selected);
         }
 
-        if let Some(root) = workspace.root_package.as_ref().and_then(|root| {
-            workspace
-                .packages
-                .iter()
-                .find(|package| &package.name == root)
-        }) {
-            return Ok(vec![root]);
-        }
-
-        bail!("manifest contains multiple packages; pass --package <name>")
+        workspace
+            .root_package
+            .as_ref()
+            .and_then(|root| {
+                workspace
+                    .packages
+                    .iter()
+                    .find(|package| &package.name == root)
+            })
+            .map(|root| vec![root])
+            .ok_or(RunFailure::NoRootPackage)
     }
 
-    fn build_package_context(package: &PackageDescription) -> Result<PackageContext> {
+    fn build_package_context(package: &PackageDescription) -> Result<PackageContext, RunFailure> {
         let manifest_dir = package
             .manifest_path
             .parent()
-            .context("package manifest has no parent directory")?;
+            .ok_or(RunFailure::NoParentDirectory)?;
 
         let mut collector = SourceRootCollector::new();
         collector.collect_from_targets(&package.targets);
