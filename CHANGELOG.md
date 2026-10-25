@@ -14,13 +14,14 @@ file, where 0.3.1 scored it under a lossy name; such a file cannot be a `mod`
 since the core has no `std`: for 54 file sizes up to 100,000 effective lines,
 the first at 1,374, its last bit differs from the platform's, which can change
 the last digits of `risk_score` and `total_risk` in `--json`; no text report
-changes. The
-repository splits into a technology-free core and a cli crate
-(`docs/CORE_CLI_SPLIT.md`), which changes how the library is packaged and
-much of its API. One `pub` free function became an associated function, for
-stern4rust 0.17.0's new `owned-functions` rule -- a file with a subject holds
-no free function. `Args` and `FileRiskReport` no longer expose their fields,
-for stern4rust's coming `records-and-objects` rule.
+changes.
+
+The repository splits into a technology-free core and a cli crate
+(`docs/history/[IMPLEMENTED] CORE_CLI_SPLIT.md`), which changes how the library
+is packaged and much of its API. One `pub` free function became an associated
+function, for stern4rust 0.17.0's new `owned-functions` rule -- a file with a
+subject holds no free function. `Args` and `FileRiskReport` no longer expose
+their fields, for stern4rust's coming `records-and-objects` rule.
 
 ### Changed (packages)
 - `cargo-iceberg4rust` is now the command-line crate (`cli/`): the

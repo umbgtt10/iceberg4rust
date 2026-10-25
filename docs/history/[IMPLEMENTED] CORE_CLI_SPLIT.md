@@ -1,8 +1,28 @@
-# A technology-free core and a cli crate
+# [IMPLEMENTED] A technology-free core and a cli crate
 
-Status: **in progress** -- one commit per slice, in the order below.
+Status: **implemented**, 2026-10-25, in ten signed commits on `main`; the
+record below is the plan as it landed, row by row.
 
-## Why
+| slice | commit |
+|---|---|
+| S0 the record | `6bf2acd` |
+| S1 one dry4rust run, exclusions by path | `49a92c8` |
+| S2 the split | `8e45b08` |
+| S3 `SourceTree` | `13d4ee8` |
+| S4 `WorkspaceReader` | `0fbeaf1` |
+| S5 `ReportRenderer` | `e18ff8f` |
+| S6 `#![no_std]` | `bd9397d` |
+| S7 the technology-free gate | `1da1b5d` |
+| S8 `.cargo/mutants.toml` | `9d3ad93` |
+| S9 docs, and this move | the commit that added this file |
+
+---
+
+## A technology-free core and a cli crate
+
+Status: **implemented** -- one commit per slice, in the order below.
+
+### Why
 
 Mutation testing pays for every mutant with a build and a test run. A mutant in
 code that runs `cargo metadata`, walks a disk or prints is slow to kill, and a
@@ -10,7 +30,7 @@ test that needs a workspace to run in is slow to run. So the scoring, the
 selection and the text report move into a crate that touches no technology at
 all, and mutation testing is scoped to that crate alone.
 
-## The shape
+### The shape
 
 The workspace grows a third member:
 
@@ -23,7 +43,7 @@ The workspace grows a third member:
 `cli` depends on `core`, never the reverse. Both published crates share one
 workspace version.
 
-### Ports
+#### Ports
 
 Core declares a trait for everything technological it needs, implemented in
 `cli/src/system/` and, for core's own tests, by in-memory fakes under
@@ -48,7 +68,7 @@ compared byte for byte against 0.3.1 after every slice that touches them.
 disagree in the last bit for a few file sizes (the first at 1,374 effective
 lines), visible only in `--json`'s `risk_score` and `total_risk`.
 
-### The gate
+#### The gate
 
 A stage-2 gate, first in the run, keeps core technology-free: its manifest may
 name only its allowed crates in any section, its crate root must carry
@@ -56,12 +76,12 @@ name only its allowed crates in any section, its crate root must carry
 `core/tests` may reach `std::{env,fs,io,net,os,process}`, the printing macros,
 the file-system methods or `extern crate std`.
 
-### Mutation testing
+#### Mutation testing
 
 `.cargo/mutants.toml` scopes cargo-mutants to `core/src`; each mutant runs
 core's tests only.
 
-## Slices
+### Slices
 
 | # | slice | status |
 |---|---|---|
@@ -73,10 +93,10 @@ core's tests only.
 | S5 | the `ReportRenderer` port: report selection in core, the text report in core, the JSON report in cli; serde leaves core | **landed** (`e18ff8f`). `Config` loses `json`: the renderer is the format |
 | S6 | `#![no_std]`: alloc imports, `libm`, typed errors; anyhow leaves core | **landed** (`bd9397d`) |
 | S7 | the technology-free gate, first in stage 2 | **landed** (`1da1b5d`). A crate declared in two sections is named once |
-| S8 | `.cargo/mutants.toml` | **landed**. `cargo mutants --list`: 325 mutants, all in `iceberg4rust-core` |
-| S9 | docs, and this record moves to `docs/history/` | |
+| S8 | `.cargo/mutants.toml` | **landed** (`9d3ad93`). `cargo mutants --list`: 325 mutants, all in `iceberg4rust-core` |
+| S9 | docs, and this record moves to `docs/history/` | **landed**: CLAUDE.md, README, ARCHITECTURE, a new ADR-TechnologyFreeCore, the packaging ADR, IMPLEMENTED-FEATURES |
 
-## Tests that move
+### Tests that move
 
 No test is deleted. Tests whose subject moves go with it:
 

@@ -62,7 +62,9 @@ This document describes the feature set currently shipped by
 
 ### Packaging
 
-- Publishes as `cargo-iceberg4rust` with library `iceberg4rust`
+- Publishes as `cargo-iceberg4rust` with library `iceberg4rust`. Unreleased:
+  the command and the analysis become two crates, the library published as
+  `iceberg4rust-core` -- see the [CHANGELOG](../CHANGELOG.md)
 - Invoked as `cargo iceberg4rust`; the subcommand name cargo inserts at `argv[1]`
   is stripped conditionally, so direct invocation is unaffected and a package
   legitimately named `iceberg4rust` survives as a `--package` value

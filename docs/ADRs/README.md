@@ -2,8 +2,8 @@
 
 Each file records one decision that shaped this codebase, with the forces that
 made it and the alternatives it displaced. Unlike the priority-tiered ADRs of
-larger ecosystem repos, these are not tiered: `iceberg4rust` is a single-crate
-CLI with a small enough decision surface that a flat list is sufficient.
+larger ecosystem repos, these are not tiered: `iceberg4rust` is a small two-crate
+tool with a small enough decision surface that a flat list is sufficient.
 
 ## Index
 
@@ -11,7 +11,8 @@ CLI with a small enough decision surface that a flat list is sufficient.
 |---|---|
 | [ADR-FileScopeIsTheWholeSubject](ADR-FileScopeIsTheWholeSubject.md) | The unit is the file and the subject is private implementation — a file can pass every function-level gate and still be unreadable, and a maximum cannot express accumulation. |
 | [ADR-HiddenMeansUnreachable](ADR-HiddenMeansUnreachable.md) | A function counts as hidden only if it is unreachable from outside, so trait-impl methods are excluded from `P` while their complexity still counts. |
-| [ADR-CargoSubcommandPackaging](ADR-CargoSubcommandPackaging.md) | The crate publishes as `cargo-iceberg4rust` with library `iceberg4rust`, and strips the subcommand name cargo re-inserts at `argv[1]`. |
+| [ADR-CargoSubcommandPackaging](ADR-CargoSubcommandPackaging.md) | The command publishes as `cargo-iceberg4rust` and strips the subcommand name cargo re-inserts at `argv[1]`; the library `iceberg4rust` publishes as `iceberg4rust-core`. |
+| [ADR-TechnologyFreeCore](ADR-TechnologyFreeCore.md) | The analysis is a `no_std` crate that reaches all technology through ports `cli` implements, so mutation testing it needs nothing but its own tests. |
 
 ## Template
 

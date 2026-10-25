@@ -65,6 +65,8 @@ complexity still counts. Full derivation, every term and every weight:
 cargo install cargo-iceberg4rust
 ```
 
+The analysis itself is a `no_std` library, `iceberg4rust-core` (`use iceberg4rust::…`).
+
 ## Usage
 
 ```sh
@@ -100,28 +102,29 @@ non-zero.
 ```
 cargo-iceberg4rust report
 
-package             file                                 loc    private_fns  private_complexity  data_structs  behavioral_structs        risk
-------------------  ---------------------------------  -----  -------------  ------------------  ------------  ------------------  ----------
-cargo-iceberg4rust  src/private_helper_classifier.rs     100              7                  14             0                   0        9.32
-cargo-iceberg4rust  src/private_function_collector.rs     85              8                  10             0                   0        8.35
+package            file                                          loc    private_fns  private_complexity  data_structs  behavioral_structs        risk
+-----------------  ------------------------------------------  -----  -------------  ------------------  ------------  ------------------  ----------
+iceberg4rust-core  src/analysis/private_helper_classifier.rs      97              7                  14             0                   0        9.26
+iceberg4rust-core  src/analysis/private_function_collector.rs     92              8                  10             0                   0        8.50
 
 Offender detail:
 
-  cargo-iceberg4rust  src/private_helper_classifier.rs  (risk 9.32, 7 private fns, complexity 14)
+  iceberg4rust-core  src/analysis/private_helper_classifier.rs  (risk 9.26, 7 private fns, complexity 14)
       line  complexity  function
-        32           3  collect_structs
-        69           3  upgrade_impls
-        79           3  try_upgrade_impl
+        33           3  collect_structs
+        88           3  try_upgrade_impl
+       109           3  upgrade_impls
         59           2  recurse_collect_structs
-       100           2  recurse_upgrade_impls
-        46           1  try_insert_data_struct
-       111           0  impl_target_name
+        69           2  recurse_upgrade_impls
+        79           1  try_insert_data_struct
+        47           0  impl_target_name
 
-summary: scored_files=11 visible_files=2 threshold=8.00 top=2 total_risk=37.93
+summary: scored_files=15 visible_files=2 threshold=8.00 top=2 total_risk=39.98
 ```
 
-(`iceberg4rust`'s own source, analysed by itself at `--threshold 8` — the shipped
-default of `20` reports nothing on a crate this small.)
+(`iceberg4rust`'s own analysis crate, analysed by itself at `--threshold 8`,
+the second offender's detail left out — the shipped default of `20` reports
+nothing on a crate this small.)
 
 The summary table says which file is over; the detail says what is in it, so
 there is somewhere to go without opening the file first. Functions are ordered by
@@ -170,11 +173,18 @@ because an automated consumer will find them before it finds the real fix.
 
 ## Development
 
-The repository is a workspace of two members: `core/` is the published crate
-(package `cargo-iceberg4rust`, library `iceberg4rust`), and `xtask/` is the
-gate orchestration behind `cargo xtask`. Both are gated.
+The repository is a workspace of three members, all gated:
 
-Mandatory after every change to either member's `src/` or `tests/`:
+| member | package | what it is |
+|---|---|---|
+| `core/` | `iceberg4rust-core` (library `iceberg4rust`) | the analysis: `#![no_std]`, no technology, every piece of it behind a port |
+| `cli/` | `cargo-iceberg4rust` | the command: argument parsing, the composition root, and the adapters for cargo metadata, the file system and the JSON report |
+| `xtask/` | `xtask` | the gates behind `cargo xtask` |
+
+The core is kept technology-free so that mutation testing it needs nothing but
+its own tests; `.cargo/mutants.toml` scopes cargo-mutants to it.
+
+Mandatory after every change to any member's `src/` or `tests/`:
 
 ```sh
 just stage1
@@ -183,9 +193,10 @@ just stage2
 
 Stage 1 is formatting, clippy and tests — cargo built-ins only, so it works on
 a fresh checkout. Stage 2 runs `cargo xtask stage2`, which runs, in this
-order: `cargo stern4rust` (house coding rules, all of them), `cargo shear`
-(every declared dependency used), `cargo dry4rust`
-(no duplicated code in `core/src` beyond `dry4rust-baseline.json`),
+order: the technology-free core gate (core's manifest, crate-root attributes
+and the std it may not reach), `cargo stern4rust` (house coding rules, all of
+them), `cargo shear` (every declared dependency used), `cargo dry4rust`
+(no duplicated code in `core/src` and `cli/src` beyond `dry4rust-baseline.json`),
 `cargo crap4rust` (complexity vs. coverage), `cargo twin4rust` (every source
 file has a mirrored test file), and `cargo-iceberg4rust` against itself — a
 tool that enforces a bound it does not respect is not worth installing.
