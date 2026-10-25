@@ -71,8 +71,8 @@ core's tests only.
 | S3 | the `SourceTree` port, `SourcePath`, `PackageAnalyzer`; the walker becomes cli's `WalkdirSourceTree` | **landed** (`13d4ee8`). Until S4 the resolver itself turns cargo's paths into `SourcePath`s |
 | S4 | the `WorkspaceReader` port and core's workspace records; `CargoWorkspaceReader` in cli | **landed** (`0fbeaf1`). The manifest path stays in cli: `Config` loses it |
 | S5 | the `ReportRenderer` port: report selection in core, the text report in core, the JSON report in cli; serde leaves core | **landed** (`e18ff8f`). `Config` loses `json`: the renderer is the format |
-| S6 | `#![no_std]`: alloc imports, `libm`, typed errors; anyhow leaves core | **landed** |
-| S7 | the technology-free gate, first in stage 2 | |
+| S6 | `#![no_std]`: alloc imports, `libm`, typed errors; anyhow leaves core | **landed** (`bd9397d`) |
+| S7 | the technology-free gate, first in stage 2 | **landed**. A crate declared in two sections is named once |
 | S8 | `.cargo/mutants.toml` | |
 | S9 | docs, and this record moves to `docs/history/` | |
 

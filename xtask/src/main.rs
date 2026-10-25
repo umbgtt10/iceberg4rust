@@ -6,7 +6,12 @@ use std::env::args;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use xtask::boundary::boundary_rule::BoundaryRule;
+use xtask::boundary::crate_root_attributes::CrateRootAttributes;
+use xtask::boundary::disk_source_files::DiskSourceFiles;
+use xtask::boundary::package_dependencies::PackageDependencies;
 use xtask::crap::crap_report_parser::CrapReportParser;
+use xtask::gates::boundary_gate::BoundaryGate;
 use xtask::gates::crap_gate::CrapGate;
 use xtask::gates::dry_gate::DryGate;
 use xtask::gates::gate::Gate;
@@ -20,9 +25,34 @@ use xtask::process::system_command_runner::SystemCommandRunner;
 const CLI_PACKAGE: &str = "cargo-iceberg4rust";
 const CORE_PACKAGE: &str = "iceberg4rust-core";
 const XTASK_PACKAGE: &str = "xtask";
+const ALLOWED_CRATES: [&str; 3] = ["libm", "proc-macro2", "syn"];
+const CORE_DIRS: [[&str; 2]; 2] = [["core", "src"], ["core", "tests"]];
+const CORE_ROOT: [&str; 3] = ["core", "src", "lib.rs"];
+const DRY_EXCLUDES: [&[&str]; 3] = [&["xtask"], &["core", "tests"], &["cli", "tests"]];
+const FORBIDDEN_MODULES: [&str; 6] = [
+    "std::env",
+    "std::fs",
+    "std::io",
+    "std::net",
+    "std::os",
+    "std::process",
+];
+const FORBIDDEN_MACROS: [&str; 5] = ["dbg", "eprint", "eprintln", "print", "println"];
+const REQUIRED_ATTRIBUTES: [&str; 2] = ["no_std", "forbid(unsafe_code)"];
+const FORBIDDEN_METHODS: [&str; 10] = [
+    "canonicalize",
+    "exists",
+    "is_dir",
+    "is_file",
+    "is_symlink",
+    "metadata",
+    "read_dir",
+    "read_link",
+    "symlink_metadata",
+    "try_exists",
+];
 const CRAP_THRESHOLD: &str = "15";
 const SELF_GATE_THRESHOLD: &str = "9.5";
-const DRY_EXCLUDES: [&[&str]; 3] = [&["xtask"], &["core", "tests"], &["cli", "tests"]];
 const DRY_BASELINE: &str = "dry4rust-baseline.json";
 const DRY_MIN_NODES: &str = "25";
 
@@ -50,20 +80,50 @@ fn run_stage2() -> ExitCode {
         String::from(XTASK_PACKAGE),
     ];
 
+    // First: core stays free of technology -- only its allowed crates in its
+    // manifest, `no_std` and `forbid(unsafe_code)` on its root, and no file
+    // system, process, environment or stdout in its tests -- so mutation testing
+    // it needs nothing but its own tests. A breach is fixed by moving code into
+    // cli, which changes what every later gate, stern4rust's included, measures;
+    // and it costs a second.
+    let root = workspace_root();
+    let sources = DiskSourceFiles::new();
+    let dependencies = PackageDependencies::new();
+    let attributes = CrateRootAttributes::new();
+    let boundary = BoundaryGate::new(
+        &runner,
+        &sources,
+        &dependencies,
+        &attributes,
+        manifest_path.clone(),
+        BoundaryRule {
+            package: String::from(CORE_PACKAGE),
+            source_dirs: CORE_DIRS.iter().map(|dir| below(&root, dir)).collect(),
+            allowed_crates: ALLOWED_CRATES.map(String::from).to_vec(),
+            crate_root: below(&root, &CORE_ROOT),
+            required_attributes: REQUIRED_ATTRIBUTES.map(String::from).to_vec(),
+            forbidden_modules: FORBIDDEN_MODULES.map(String::from).to_vec(),
+            forbidden_macros: FORBIDDEN_MACROS.map(String::from).to_vec(),
+            forbidden_methods: FORBIDDEN_METHODS.map(String::from).to_vec(),
+        },
+    );
+
+    // Second: its corrections are renames, file moves and directory splits, so
+    // a layout it is about to reject is one the later gates would measure for
+    // nothing.
     let stern = SternGate::new(&runner, manifest_path.clone(), packages.clone());
 
-    // Second: every declared dependency used, in the section that uses it. Its
+    // Third: every declared dependency used, in the section that uses it. Its
     // corrections edit manifests only, so they move nothing the gates behind it
     // measure, and it costs a second.
     let shear = ShearGate::new(&runner, manifest_path.clone());
 
-    // Third, for the same reason stern4rust is first: removing a duplicate
+    // Fourth, for the same reason stern4rust runs early: removing a duplicate
     // moves code between files, which changes what the three behind it measure.
     // One run over both published crates' sources, so a copy from one into the
     // other is seen -- tests repeat their arrangement by design, and xtask is not
     // published -- with zero ceilings against a baseline of what was already
     // duplicated when the gate arrived, so it fails on what a change adds.
-    let root = workspace_root();
     let dry = DryGate::new(
         &runner,
         root.to_string_lossy().into_owned(),
@@ -91,7 +151,7 @@ fn run_stage2() -> ExitCode {
         String::from(SELF_GATE_THRESHOLD),
     );
 
-    let gates: Vec<&dyn Gate> = vec![&stern, &shear, &dry, &crap, &twin, &self_gate];
+    let gates: Vec<&dyn Gate> = vec![&boundary, &stern, &shear, &dry, &crap, &twin, &self_gate];
 
     match Stage2::new(gates).run() {
         Ok(()) => {

@@ -86,6 +86,14 @@ for stern4rust's coming `records-and-objects` rule.
   `failed to render the report` (`reporting::render_failure::RenderFailure`);
   0.3.1's `failed to render report as JSON` could not be reached.
 
+### Added
+- Stage 2 gains a first gate, "Technology-free core": the core's manifest may
+  name only `libm`, `proc-macro2` and `syn`, in any section; its crate root
+  must carry `#![no_std]` and `#![forbid(unsafe_code)]`; and no file under
+  `core/src` or `core/tests` may reach `std::{env,fs,io,net,os,process}`, the
+  printing macros, the file-system methods of `Path` or `extern crate std`.
+  dry4rust makes one run over both published crates' sources.
+
 ### Changed
 - `analysis::struct_usage_collector::collect_used_private_structs` is
   `StructUsageCollector::collect_used_private_structs`, on a now-public
