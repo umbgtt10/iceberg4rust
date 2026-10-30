@@ -82,6 +82,12 @@ gates in this order:
 | `cargo iceberg4rust` | is any file's private implementation risk too high |
 | `cargo deny` | do the dependencies carry an advisory, a refused licence or a foreign source |
 
+`just stage1` starts with `just sync`: `cargo update`, every dependency to its
+newest compatible version, in the lock file only, while the tools are in
+development. It needs the network. A requirement in a manifest never moves, so a
+published crate's users can still resolve what they could; what it moves is
+committed on its own. Breaking versions are a separate decision, not taken here.
+
 The technology-free gate runs **first**. It is the xtask's own -- no tool to
 install -- and asks three things of `core`: that its manifest names only
 `libm`, `proc-macro2` and `syn`, in any section (read from `cargo metadata
