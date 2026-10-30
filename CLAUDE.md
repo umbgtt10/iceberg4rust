@@ -68,7 +68,7 @@ Run gates:
 If either gate is not green, the work is not complete.
 
 Stage 1 is formatting, clippy and tests -- cargo built-ins only, so it works on
-a fresh checkout. Stage 2 is `cargo xtask stage2`, which orchestrates seven
+a fresh checkout. Stage 2 is `cargo xtask stage2`, which orchestrates eight
 gates in this order:
 
 | gate | asks |
@@ -80,6 +80,7 @@ gates in this order:
 | `cargo crap4rust` | is any function complex and untested |
 | `cargo twin4rust` | does every source file have a mirrored test file |
 | `cargo iceberg4rust` | is any file's private implementation risk too high |
+| `cargo deny` | do the dependencies carry an advisory, a refused licence or a foreign source |
 
 The technology-free gate runs **first**. It is the xtask's own -- no tool to
 install -- and asks three things of `core`: that its manifest names only
@@ -147,12 +148,29 @@ Re-record the baseline only to drop groups that are gone, never to admit new
 ones, and at the same floor -- a baseline matches only at the floor it was
 recorded at: `cargo dry4rust --path "$PWD" --exclude "$PWD/xtask" --exclude "$PWD/core/tests" --exclude "$PWD/cli/tests" --min-nodes 25 --baseline "$PWD/dry4rust-baseline.json" baseline`.
 
+cargo-deny runs **last**, and is the one gate that can turn red with nothing
+changed: its advisories come from the RustSec database, so a newly published
+one fails an untouched checkout, and it fetches that database over the network.
+That is the point of it, and running last keeps it from hiding what the house
+gates say about a change. `deny.toml` is the same file in every *4rust
+repository and slotgate: licences MIT, Apache-2.0 and Unicode-3.0 -- the union
+of what their trees carry -- crates.io as the only source, duplicate versions a
+warning, and a wildcard requirement refused except a path dependency in an
+unpublished crate. An accepted advisory goes in `[advisories] ignore` with its
+id and its reason. The gate fetches the advisory database first, on its own and
+up to three times, then checks `--frozen` -- locked and offline -- so a fetch
+that keeps failing reports the gate as unable to run, never as an advisory
+found. It decodes cargo-deny's exit code, one bit per failed check, into the
+checks' names; a `deny.toml` it cannot read exits 1, as advisories does, and the
+streamed output says which.
+
 `cargo install just`
 `cargo install cargo-stern4rust`
 `cargo install cargo-dry4rust`
 `cargo install cargo-crap4rust`
 `cargo install cargo-twin4rust`
 `cargo install --locked cargo-shear --version 1.14.0`
+`cargo install --locked cargo-deny --version 0.20.2`
 `cargo install cargo-llvm-cov`
 `rustup component add llvm-tools`
 
