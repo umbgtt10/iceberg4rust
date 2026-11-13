@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use iceberg4rust::analysis::complexity_scorer::ComplexityScorer;
+use syn::Item;
 use syn::parse_file;
 
 fn score_block(source: &str) -> u32 {
@@ -10,7 +11,7 @@ fn score_block(source: &str) -> u32 {
     let syntax = parse_file(&wrapped).expect("valid source");
     let items = syntax.items;
     let item_fn = items.into_iter().next().expect("one item");
-    let syn::Item::Fn(f) = item_fn else {
+    let Item::Fn(f) = item_fn else {
         panic!("expected fn")
     };
     ComplexityScorer::new().score(&f.block)
