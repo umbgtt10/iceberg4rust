@@ -19,9 +19,16 @@ This document describes the feature set currently shipped by
   `pub` leaves `P`, and only `pub` keeps a helper struct out of `D` and `B`
 - Trait-impl complexity still counts toward `sum(C_i)`, and the private structs
   such methods use still count toward `D` and `B`
+- `C_i` is cognitive complexity over every sub-expression of a function's body:
+  `if`, `match`, `for`, `while` and `loop` add `1 + nesting`, and a closure
+  nests its body one level deeper
 - Helper structs are classified as data-only or behavioural, weighted `0.5` and
   `2.0` respectively
-- Effective lines exclude blank lines and comments
+- A helper struct counts as used through a parameter, return or local type, a
+  struct literal, a tuple constructor, or a path naming it before its last
+  segment, as in `Helper::new()`
+- Effective lines exclude blank lines and comments, nested block comments
+  included
 - `#[cfg(test)]` and other test-tagged items are stripped before scoring
 - The zero baseline is derived from the formula, never short-circuited on `P = 0`
 - Files scoring zero are dropped before becoming reports
