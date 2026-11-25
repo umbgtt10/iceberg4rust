@@ -74,6 +74,50 @@ It excludes test-only code paths such as:
 - `build.rs`
 - items inside `#[cfg(test)]` or other test-tagged items
 
+### Cognitive Complexity
+
+`C_i` reads the whole body of private function `i` -- every expression and
+every sub-expression in it, wherever it stands -- and adds only for control
+flow. Each counted construct adds `1 + nesting`, where `nesting` is how many
+constructs enclose it; a construct nests what it holds one level deeper.
+
+| construct | adds | nests one level deeper | pinned by |
+|---|---|---|---|
+| `if` | `1 + nesting` | its block and its `else` | `single_if_adds_one`, `nested_if_increments_nesting` |
+| `if let` | `1 + nesting` | as `if` | `score_if_let_adds_one` |
+| `else` | nothing | -- | `if_else_adds_one` |
+| `else if` | an `if` inside the `else`: `1 + nesting + 1` | as `if` | `else_if_increments_with_nesting` |
+| `match` | `1 + nesting` | every arm: its guard and its body | `match_adds_one_base`, `score_match_arm_holding_an_if_scores_it_one_level_deeper`, `score_match_arm_guard_holding_a_match_scores_it_one_level_deeper` |
+| `for` | `1 + nesting` | its body | `for_loop_adds_one`, `score_for_loop_body_holding_an_if_scores_it_one_level_deeper` |
+| `while` | `1 + nesting` | its body | `while_loop_adds_one`, `score_while_loop_body_holding_an_if_scores_it_one_level_deeper` |
+| `while let` | `1 + nesting` | its body | `score_while_let_adds_one` |
+| `loop` | `1 + nesting` | its body | `infinite_loop_adds_one`, `score_loop_body_holding_an_if_scores_it_one_level_deeper` |
+| a closure | nothing | its body | `score_closure_body_holding_an_if_scores_it_one_level_deeper`, `score_closure_without_control_flow_adds_nothing` |
+
+An `if` or `while` condition, a `match` scrutinee and a `for` iterable stand at
+the construct's own nesting, not one deeper
+(`score_if_condition_holding_a_match_adds_the_match_score` and its three
+siblings). Once a construct ends, what follows it is back at the outer nesting
+(`score_constructs_one_after_another_score_at_the_outer_nesting`,
+`score_if_after_a_closure_scores_at_the_outer_nesting`).
+
+A closure adds nesting as Sonar's cognitive complexity does: a branch inside the
+closure handed to `map` is one level deeper than the same branch written out.
+
+Everything else is walked at the nesting it stands at and adds nothing of its
+own, each pinned by a test named after it in
+`core/tests/analysis/complexity_scorer_tests.rs`: plain, `unsafe` and `async`
+blocks; parentheses; `!` and the binary operators; calls and method calls,
+receiver and arguments; `return`, `break` and `?`; assignments, struct
+literals, tuples and references; a `let` initialiser and a `let`-`else`'s
+`else` block; and a function, impl or module declared inside the body, scored
+at the nesting it is declared at.
+
+Not counted: `&&` and `||` sequences, `break` and `continue` to a label, and
+recursion. Not seen: the arguments of a macro invocation -- `assert!`,
+`matches!`, `vec!` -- which `syn` keeps as unparsed tokens
+(`score_if_inside_a_macro_call_returns_zero`).
+
 ### Additional Private Structs
 
 The file's primary struct is the first top-level struct declared in the file.

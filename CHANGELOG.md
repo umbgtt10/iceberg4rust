@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+- `C_i` reads every sub-expression of a function's body. `ComplexityScorer`
+  entered only some expression kinds -- blocks, binary operands, call
+  arguments and the counted constructs themselves -- so control flow inside a
+  closure, a method call's receiver or arguments, `!`, `return`, `break`, `?`,
+  parentheses, an `unsafe` or `async` block, an assignment, a struct literal,
+  a tuple, a reference, a `let`-`else`'s `else` block or a `match` arm's guard
+  scored 0: `x.consume(if a { 1 } else { 2 })` scored 0 where
+  `consume(if a { 1 } else { 2 })` scored 1. It is now a `syn::visit::Visit`
+  over the whole body that adds only for control flow. A closure nests its
+  body one level deeper, as Sonar's cognitive complexity does, so a branch
+  inside the closure handed to `map` scores 2. `docs/FORMULA.md` lists every
+  counted construct, each with its test.
+
+### Changed
+- `ComplexityScorer::score` takes `self` by value, as
+  `PrivateFunctionCollector::collect` does: the scorer is the walk's state.
+
 ## [0.4.0] - 2026-10-27
 
 The tool's behaviour, command line and scoring are unchanged -- its stdout,

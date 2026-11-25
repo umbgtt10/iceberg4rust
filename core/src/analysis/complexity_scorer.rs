@@ -2,105 +2,86 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use syn::{
-    Block, Expr, ExprBinary, ExprBlock, ExprCall, ExprForLoop, ExprIf, ExprLoop, ExprMatch,
-    ExprWhile, ImplItem, Item, ItemImpl, Stmt,
-};
+use syn::visit::{Visit, visit_expr_closure};
+use syn::{Block, ExprClosure, ExprForLoop, ExprIf, ExprLoop, ExprMatch, ExprWhile};
 
 #[derive(Default)]
-pub struct ComplexityScorer;
+pub struct ComplexityScorer {
+    nesting: u32,
+    total: u32,
+}
 
 impl ComplexityScorer {
     pub fn new() -> Self {
-        Self
-    }
-
-    pub fn score(&self, block: &Block) -> u32 {
-        self.score_block(block, 0)
-    }
-
-    fn score_block(&self, block: &Block, nesting: u32) -> u32 {
-        block
-            .stmts
-            .iter()
-            .map(|stmt| self.score_stmt(stmt, nesting))
-            .sum()
-    }
-
-    fn score_expr(&self, expr: &Expr, nesting: u32) -> u32 {
-        match expr {
-            Expr::If(ExprIf {
-                cond,
-                then_branch,
-                else_branch,
-                ..
-            }) => {
-                let mut score = 1 + nesting + self.score_expr(cond, nesting);
-                score += self.score_block(then_branch, nesting + 1);
-                if let Some((_, else_branch)) = else_branch {
-                    score += self.score_expr(else_branch, nesting + 1);
-                }
-                score
-            }
-            Expr::Match(ExprMatch { expr, arms, .. }) => {
-                1 + nesting
-                    + self.score_expr(expr, nesting)
-                    + arms
-                        .iter()
-                        .map(|arm| self.score_expr(&arm.body, nesting + 1))
-                        .sum::<u32>()
-            }
-            Expr::ForLoop(ExprForLoop { expr, body, .. }) => {
-                1 + nesting + self.score_expr(expr, nesting) + self.score_block(body, nesting + 1)
-            }
-            Expr::While(ExprWhile { cond, body, .. }) => {
-                1 + nesting + self.score_expr(cond, nesting) + self.score_block(body, nesting + 1)
-            }
-            Expr::Loop(ExprLoop { body, .. }) => 1 + nesting + self.score_block(body, nesting + 1),
-            Expr::Block(ExprBlock { block, .. }) => self.score_block(block, nesting),
-            Expr::Binary(ExprBinary { left, right, .. }) => {
-                self.score_expr(left, nesting) + self.score_expr(right, nesting)
-            }
-            Expr::Call(ExprCall { func, args, .. }) => {
-                self.score_expr(func, nesting)
-                    + args
-                        .iter()
-                        .map(|arg| self.score_expr(arg, nesting))
-                        .sum::<u32>()
-            }
-            _ => 0,
+        Self {
+            nesting: 0,
+            total: 0,
         }
     }
 
-    fn score_item(&self, item: &Item, nesting: u32) -> u32 {
-        match item {
-            Item::Fn(item_fn) => self.score_block(&item_fn.block, nesting),
-            Item::Mod(item_mod) => item_mod.content.as_ref().map_or(0, |(_, items)| {
-                items
-                    .iter()
-                    .map(|item| self.score_item(item, nesting))
-                    .sum()
-            }),
-            Item::Impl(ItemImpl { items, .. }) => items
-                .iter()
-                .map(|item| match item {
-                    ImplItem::Fn(method) => self.score_block(&method.block, nesting),
-                    _ => 0,
-                })
-                .sum(),
-            _ => 0,
+    pub fn score(mut self, block: &Block) -> u32 {
+        self.visit_block(block);
+        self.total
+    }
+
+    fn count(&mut self) {
+        self.total += 1 + self.nesting;
+    }
+
+    fn count_with_body(&mut self, body: &Block) {
+        self.count();
+        self.enter();
+        self.visit_block(body);
+        self.leave();
+    }
+
+    fn enter(&mut self) {
+        self.nesting += 1;
+    }
+
+    fn leave(&mut self) {
+        self.nesting -= 1;
+    }
+}
+
+impl<'ast> Visit<'ast> for ComplexityScorer {
+    fn visit_expr_closure(&mut self, node: &'ast ExprClosure) {
+        self.enter();
+        visit_expr_closure(self, node);
+        self.leave();
+    }
+
+    fn visit_expr_for_loop(&mut self, node: &'ast ExprForLoop) {
+        self.visit_expr(&node.expr);
+        self.count_with_body(&node.body);
+    }
+
+    fn visit_expr_if(&mut self, node: &'ast ExprIf) {
+        self.visit_expr(&node.cond);
+        self.count_with_body(&node.then_branch);
+        if let Some((_, else_branch)) = &node.else_branch {
+            self.enter();
+            self.visit_expr(else_branch);
+            self.leave();
         }
     }
 
-    fn score_stmt(&self, stmt: &Stmt, nesting: u32) -> u32 {
-        match stmt {
-            Stmt::Item(item) => self.score_item(item, nesting),
-            Stmt::Expr(expr, _) => self.score_expr(expr, nesting),
-            Stmt::Local(local) => local
-                .init
-                .as_ref()
-                .map_or(0, |init| self.score_expr(&init.expr, nesting)),
-            Stmt::Macro(_) => 0,
+    fn visit_expr_loop(&mut self, node: &'ast ExprLoop) {
+        self.count_with_body(&node.body);
+    }
+
+    fn visit_expr_match(&mut self, node: &'ast ExprMatch) {
+        self.count();
+        self.visit_expr(&node.expr);
+        self.enter();
+        for arm in &node.arms {
+            self.visit_arm(arm);
         }
+        self.leave();
+    }
+
+    fn visit_expr_while(&mut self, node: &'ast ExprWhile) {
+        self.visit_expr(&node.cond);
+        self.count_with_body(&node.body);
     }
 }
