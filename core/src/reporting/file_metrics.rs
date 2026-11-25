@@ -13,9 +13,5 @@ pub struct FileMetrics {
     pub data_structs: Vec<String>,
     pub behavioral_structs: Vec<String>,
     pub effective_loc: usize,
-    pub private_function_count: usize,
-    pub private_complexity_sum: u32,
-    pub data_private_struct_count: usize,
-    pub behavioral_private_struct_count: usize,
     pub risk_score: f64,
 }

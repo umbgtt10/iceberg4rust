@@ -56,7 +56,8 @@ Hidden means unreachable from outside: free functions and inherent impl methods,
 never trait-impl methods. See
 [ADRs/ADR-HiddenMeansUnreachable.md](ADRs/ADR-HiddenMeansUnreachable.md).
 
-`ComplexityScorer` (`complexity_scorer.rs`) scores a single block.
+`ComplexityScorer` (`complexity_scorer.rs`) scores a single block, a
+`syn::visit::Visit` over every expression in it that adds only for control flow.
 `PrivateHelperClassifier` (`private_helper_classifier.rs`) decides which helper
 structs are data-only and which carry behaviour — the difference is a factor of
 four in the formula. `StructUsageCollector` (`struct_usage_collector.rs`) finds

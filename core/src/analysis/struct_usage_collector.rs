@@ -5,8 +5,10 @@
 use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::string::{String, ToString};
 
-use syn::visit::{Visit, visit_expr_call, visit_expr_struct, visit_type_path};
-use syn::{Block, Expr, ExprCall, ExprStruct, Path, ReturnType, Signature, TypePath};
+use syn::visit::{Visit, visit_expr_call, visit_expr_path, visit_expr_struct, visit_type_path};
+use syn::{
+    Block, Expr, ExprCall, ExprPath, ExprStruct, PathSegment, ReturnType, Signature, TypePath,
+};
 
 use crate::analysis::helper_struct_kind::HelperStructKind;
 
@@ -34,8 +36,8 @@ impl<'a> StructUsageCollector<'a> {
         collector.found
     }
 
-    fn record_if_private_struct(&mut self, path: &Path) {
-        if let Some(segment) = path.segments.last() {
+    fn record_if_private_struct(&mut self, segment: Option<&PathSegment>) {
+        if let Some(segment) = segment {
             let ident = segment.ident.to_string();
             if self.helper_structs.contains_key(&ident) {
                 self.found.insert(ident);
@@ -46,20 +48,25 @@ impl<'a> StructUsageCollector<'a> {
 
 impl<'ast, 'a> Visit<'ast> for StructUsageCollector<'a> {
     fn visit_type_path(&mut self, node: &'ast TypePath) {
-        self.record_if_private_struct(&node.path);
+        self.record_if_private_struct(node.path.segments.last());
         visit_type_path(self, node);
     }
 
     fn visit_expr_struct(&mut self, node: &'ast ExprStruct) {
-        self.record_if_private_struct(&node.path);
+        self.record_if_private_struct(node.path.segments.last());
         visit_expr_struct(self, node);
     }
 
     fn visit_expr_call(&mut self, node: &'ast ExprCall) {
         if let Expr::Path(expr_path) = node.func.as_ref() {
-            self.record_if_private_struct(&expr_path.path);
+            self.record_if_private_struct(expr_path.path.segments.last());
         }
         visit_expr_call(self, node);
+    }
+
+    fn visit_expr_path(&mut self, node: &'ast ExprPath) {
+        self.record_if_private_struct(node.path.segments.iter().rev().nth(1));
+        visit_expr_path(self, node);
     }
 
     fn visit_return_type(&mut self, node: &'ast ReturnType) {

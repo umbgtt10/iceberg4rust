@@ -6,6 +6,88 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-25
+
+Scores move. A gate that passes on 0.4.0 may fail on 0.5.0 without the code
+having changed, so treat this as a threshold review rather than a drop-in
+upgrade. Three fixes make the analysis see what it missed -- control flow
+outside the few expression kinds `C_i` entered, a helper used through
+`Helper::new()`, a restricted helper struct -- and can only raise a score. The
+fourth stops counting the tail of a nested block comment as code, and can only
+lower `L`. Scored by 0.4.0 and by 0.5.0, this repository's own three packages
+go from a total risk of 81.91 to 83.08: two files rise, both from branches
+inside closures, none falls, and the worst file is unchanged.
+
+The library's API changes in two places, below under Changed: what a file's
+metrics store, and how a `ComplexityScorer` is called.
+
+### Fixed
+- `C_i` reads every sub-expression of a function's body. `ComplexityScorer`
+  entered only some expression kinds -- blocks, binary operands, call
+  arguments and the counted constructs themselves -- so control flow inside a
+  closure, a method call's receiver or arguments, `!`, `return`, `break`, `?`,
+  parentheses, an `unsafe` or `async` block, an assignment, a struct literal,
+  a tuple, a reference, a `let`-`else`'s `else` block or a `match` arm's guard
+  scored 0: `x.consume(if a { 1 } else { 2 })` scored 0 where
+  `consume(if a { 1 } else { 2 })` scored 1. It is now a `syn::visit::Visit`
+  over the whole body that adds only for control flow. A closure nests its
+  body one level deeper, as Sonar's cognitive complexity does, so a branch
+  inside the closure handed to `map` scores 2. `docs/FORMULA.md` lists every
+  counted construct, each with its test.
+- A helper struct used only through an associated function counts toward `D`
+  or `B`. `StructUsageCollector` read only a call path's last segment, so
+  `Helper::new()` and `Helper::default()` named `new` and `default`, never
+  `Helper`. The segment before a path's last now counts too, wherever the path
+  stands: `Helper::new()`, `crate::model::Helper::new()`, and
+  `map(Helper::from_parts)`.
+- A `pub(crate)`, `pub(super)`, `pub(in path)` or `pub(self)` helper struct
+  counts toward `D` or `B`. `PrivateHelperClassifier` took only a struct with
+  no visibility keyword for a helper, so restricting one took it out of the
+  score, the escape 0.2.0 closed for functions; `docs/FORMULA.md` and
+  `ADR-HiddenMeansUnreachable` already said only `pub` escapes.
+- `L` follows nested block comments. `CommentStripper` closed a block comment
+  at its first `*/`, so `/* a /* b */ c */ d` stripped to ` c */ d` and the
+  tail of a nested comment counted as code. It now tracks the nesting depth,
+  over the line's characters with no index of its own to move.
+
+### Changed
+- `ComplexityScorer::score` takes `self` by value, as
+  `PrivateFunctionCollector::collect` does: the scorer is the walk's state.
+- `FileMetrics` and `FileRiskReport` no longer store a count next to the list
+  it counts: `private_function_count`, `private_complexity_sum`,
+  `data_private_struct_count` and `behavioral_private_struct_count` leave
+  `FileMetrics`, and `FileRiskReport`'s getters of those names count
+  `functions` (the hidden ones), sum their complexity, and count `data_structs`
+  and `behavioral_structs`. A count could disagree with its list; now it
+  cannot. The console report and the `--json` fields are unchanged.
+- The tests of records alone are retired -- a test naming a record and
+  calling nothing but its accessors and derived traits -- for stern4rust
+  0.20.0's `behaviour-tests` and twin4rust 0.7.0: each check is made by a test
+  of the behaviour that uses the type.
+- Every path stern4rust's `imported-paths` will report is reached through an
+  import.
+
+### Added
+- Stage 2 gains a last gate, `cargo deny`: advisories, licences, bans and
+  sources against `deny.toml`. The advisory database is fetched first, up to
+  three times, then checked `--frozen`, so a failed fetch reads as a gate that
+  could not run rather than as an advisory found.
+- `just sync`, which stage 1 runs first: `cargo update`, every dependency to
+  its newest compatible version, in the lock file only.
+- Every commit message carries `core`'s grip and braintax and their ratio,
+  scored as staged: `cargo xtask grip-braintax`, run by the commit-msg hook in
+  `.githooks/`, which `just hooks` enables once a clone.
+- A mutation-testing round over `core` at 6461646 answered its survivors with
+  26 tests: seventeen pin what `ComplexityScorer` scores below the top of a
+  block, three where `CommentStripper` resumes and what a tuple constructor
+  counts, and six the formula's exact value, the primary struct, a data-struct
+  count, the helper-struct line with data structs alone, and `SourcePath`'s
+  equality and ordering. Those it showed to be bugs are this release's fixes.
+  One it found is deferred: `TestAttrChecker` misreads `#[tokio::test]`,
+  `cfg(all(test, ..))`, `cfg_attr(test, ..)` and `#[allow(test)]`, the same
+  defect as in four sibling tools, to be fixed once for all of them
+  (`docs/OPEN_POINTS.md`).
+
 ## [0.4.0] - 2026-10-27
 
 The tool's behaviour, command line and scoring are unchanged -- its stdout,

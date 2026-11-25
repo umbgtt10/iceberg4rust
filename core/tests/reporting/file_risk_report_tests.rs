@@ -6,6 +6,38 @@ use iceberg4rust::reporting::file_metrics::FileMetrics;
 use iceberg4rust::reporting::file_risk_report::FileRiskReport;
 use iceberg4rust::reporting::private_function_report::PrivateFunctionReport;
 
+fn function(name: &str, complexity: u32, is_hidden: bool) -> PrivateFunctionReport {
+    PrivateFunctionReport {
+        name: name.to_string(),
+        line: 1,
+        complexity,
+        is_hidden,
+    }
+}
+
+fn names(names: &[&str]) -> Vec<String> {
+    names.iter().map(|name| name.to_string()).collect()
+}
+
+#[test]
+fn behavioral_private_struct_count_of_several_structs_returns_their_number() {
+    // Arrange
+    let report = FileRiskReport::new(
+        "pkg".to_string(),
+        "src/lib.rs".to_string(),
+        FileMetrics {
+            behavioral_structs: names(&["Encoder", "Decoder"]),
+            ..Default::default()
+        },
+    );
+
+    // Act
+    let count = report.behavioral_private_struct_count();
+
+    // Assert
+    assert_eq!(count, 2);
+}
+
 #[test]
 fn data_private_struct_count_of_several_structs_returns_their_number() {
     // Arrange
@@ -13,7 +45,7 @@ fn data_private_struct_count_of_several_structs_returns_their_number() {
         "pkg".to_string(),
         "src/lib.rs".to_string(),
         FileMetrics {
-            data_private_struct_count: 3,
+            data_structs: names(&["Header", "Payload", "Trailer"]),
             ..Default::default()
         },
     );
@@ -32,10 +64,9 @@ fn file_risk_report_clone_produces_independent_copy() {
         "pkg".to_string(),
         "src/main.rs".to_string(),
         FileMetrics {
+            functions: vec![function("decode", 20, true)],
+            data_structs: names(&["Header", "Payload"]),
             effective_loc: 100,
-            private_function_count: 5,
-            private_complexity_sum: 20,
-            data_private_struct_count: 2,
             risk_score: 12.0,
             ..Default::default()
         },
@@ -55,13 +86,15 @@ fn file_risk_report_holds_provided_values() {
         "pkg".to_string(),
         "src/lib.rs".to_string(),
         FileMetrics {
+            functions: vec![
+                function("decode", 2, true),
+                function("encode", 4, true),
+                function("verify", 6, true),
+            ],
+            data_structs: names(&["Payload"]),
+            behavioral_structs: names(&["Encoder", "Decoder"]),
             effective_loc: 50,
-            private_function_count: 3,
-            private_complexity_sum: 12,
-            data_private_struct_count: 1,
-            behavioral_private_struct_count: 2,
             risk_score: 25.5,
-            ..Default::default()
         },
     );
 
@@ -83,39 +116,45 @@ fn file_risk_report_partial_eq_compares_all_fields() {
         "pkg".to_string(),
         "src/lib.rs".to_string(),
         FileMetrics {
+            functions: vec![
+                function("decode", 2, true),
+                function("encode", 4, true),
+                function("verify", 6, true),
+            ],
+            data_structs: names(&["Payload"]),
+            behavioral_structs: names(&["Encoder", "Decoder"]),
             effective_loc: 50,
-            private_function_count: 3,
-            private_complexity_sum: 12,
-            data_private_struct_count: 1,
-            behavioral_private_struct_count: 2,
             risk_score: 25.5,
-            ..Default::default()
         },
     );
     let b = FileRiskReport::new(
         "pkg".to_string(),
         "src/lib.rs".to_string(),
         FileMetrics {
+            functions: vec![
+                function("decode", 2, true),
+                function("encode", 4, true),
+                function("verify", 6, true),
+            ],
+            data_structs: names(&["Payload"]),
+            behavioral_structs: names(&["Encoder", "Decoder"]),
             effective_loc: 50,
-            private_function_count: 3,
-            private_complexity_sum: 12,
-            data_private_struct_count: 1,
-            behavioral_private_struct_count: 2,
             risk_score: 25.5,
-            ..Default::default()
         },
     );
     let c = FileRiskReport::new(
         "other".to_string(),
         "src/lib.rs".to_string(),
         FileMetrics {
+            functions: vec![
+                function("decode", 2, true),
+                function("encode", 4, true),
+                function("verify", 6, true),
+            ],
+            data_structs: names(&["Payload"]),
+            behavioral_structs: names(&["Encoder", "Decoder"]),
             effective_loc: 50,
-            private_function_count: 3,
-            private_complexity_sum: 12,
-            data_private_struct_count: 1,
-            behavioral_private_struct_count: 2,
             risk_score: 25.5,
-            ..Default::default()
         },
     );
 
@@ -168,4 +207,50 @@ fn new_with_functions_and_helper_structs_keeps_them() {
     );
     assert_eq!(report.data_structs(), ["Payload".to_string()]);
     assert_eq!(report.behavioral_structs(), ["Encoder".to_string()]);
+}
+
+#[test]
+fn private_complexity_sum_of_hidden_and_trait_functions_sums_them_all() {
+    // Arrange
+    let report = FileRiskReport::new(
+        "pkg".to_string(),
+        "src/lib.rs".to_string(),
+        FileMetrics {
+            functions: vec![
+                function("decode", 2, true),
+                function("encode", 3, true),
+                function("on_event", 4, false),
+            ],
+            ..Default::default()
+        },
+    );
+
+    // Act
+    let sum = report.private_complexity_sum();
+
+    // Assert
+    assert_eq!(sum, 9);
+}
+
+#[test]
+fn private_function_count_of_hidden_and_trait_functions_counts_the_hidden_ones() {
+    // Arrange
+    let report = FileRiskReport::new(
+        "pkg".to_string(),
+        "src/lib.rs".to_string(),
+        FileMetrics {
+            functions: vec![
+                function("decode", 2, true),
+                function("encode", 3, true),
+                function("on_event", 4, false),
+            ],
+            ..Default::default()
+        },
+    );
+
+    // Act
+    let count = report.private_function_count();
+
+    // Assert
+    assert_eq!(count, 2);
 }

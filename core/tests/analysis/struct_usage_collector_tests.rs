@@ -36,6 +36,69 @@ fn helpers_with(names: &[&str], kind: HelperStructKind) -> BTreeMap<String, Help
 }
 
 #[test]
+fn collect_used_private_structs_associated_fn_call_on_a_helper_is_detected() {
+    // Arrange
+    let helpers = helpers_with(&["Helper"], HelperStructKind::Behavioral);
+
+    // Act
+    let used = collect_used("fn foo() { let helper = Helper::new(); }", &helpers);
+
+    // Assert
+    assert_eq!(used, vec!["Helper"]);
+}
+
+#[test]
+fn collect_used_private_structs_associated_fn_named_by_path_is_detected() {
+    // Arrange
+    let helpers = helpers_with(&["Helper"], HelperStructKind::Behavioral);
+
+    // Act
+    let used = collect_used("fn foo() { let build = Helper::from_parts; }", &helpers);
+
+    // Assert
+    assert_eq!(used, vec!["Helper"]);
+}
+
+#[test]
+fn collect_used_private_structs_default_call_on_a_helper_is_detected() {
+    // Arrange
+    let helpers = helpers_with(&["Helper"], HelperStructKind::Data);
+
+    // Act
+    let used = collect_used("fn foo() { let helper = Helper::default(); }", &helpers);
+
+    // Assert
+    assert_eq!(used, vec!["Helper"]);
+}
+
+#[test]
+fn collect_used_private_structs_module_path_call_names_no_helper_returns_empty() {
+    // Arrange
+    let helpers = helpers_with(&["Helper"], HelperStructKind::Behavioral);
+
+    // Act
+    let used = collect_used("fn foo() { helper::run(); }", &helpers);
+
+    // Assert
+    assert!(used.is_empty());
+}
+
+#[test]
+fn collect_used_private_structs_qualified_associated_fn_call_is_detected() {
+    // Arrange
+    let helpers = helpers_with(&["Helper"], HelperStructKind::Behavioral);
+
+    // Act
+    let used = collect_used(
+        "fn foo() { let helper = crate::model::Helper::new(); }",
+        &helpers,
+    );
+
+    // Assert
+    assert_eq!(used, vec!["Helper"]);
+}
+
+#[test]
 fn collect_used_private_structs_tuple_struct_constructor_call_is_detected() {
     // Arrange
     let helpers = helpers_with(&["Wrapper"], HelperStructKind::Data);

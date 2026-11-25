@@ -81,3 +81,21 @@ is small where `pub mod` is confined to `mod.rs` and `lib.rs`, which is the
 convention in the trees this was measured against.
 
 The effect is under-reporting, the wrong direction for a gate.
+
+## One shared "is this test code?" check
+
+One shared 'is this test code?' check (deferred by the owner 2026-11-25): the
+same defect exists in crap4rust, grip4rust, braintax4rust, iceberg4rust and
+slotgate; to be written once with shared test vectors (attribute path ending in
+`test`; `cfg(P)` test-only when P is `test`, `all(..)` with any part test-only,
+`any(..)` with every part test-only, never `not(..)`; `cfg_attr` never makes an
+item test-only) and adopted by every tool.
+
+Here it is `TestAttrChecker::has_test_attr`
+(`core/src/analysis/test_attr_checker.rs`), found by the mutation round of
+2026-11-25. It takes an attribute for a test marker when its path is the bare
+`test`, or when any nested meta's path ends in `test`. So `#[tokio::test]` and
+`#[cfg(all(test, ..))]` are missed, and their items are scored as production
+code; `#[cfg_attr(test, ..)]` and `#[allow(test)]` are taken for test markers,
+and their items leave the score. Left as it is until the shared check exists,
+so the five tools change together.

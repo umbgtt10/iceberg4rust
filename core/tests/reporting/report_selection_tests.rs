@@ -12,10 +12,6 @@ fn report(file: &str, risk: f64) -> FileRiskReport {
         file.to_string(),
         FileMetrics {
             effective_loc: 100,
-            private_function_count: 5,
-            private_complexity_sum: 7,
-            data_private_struct_count: 1,
-            behavioral_private_struct_count: 2,
             risk_score: risk,
             ..Default::default()
         },
@@ -28,10 +24,6 @@ fn report_in(package: &str, file: &str, risk: f64) -> FileRiskReport {
         file.to_string(),
         FileMetrics {
             effective_loc: 100,
-            private_function_count: 5,
-            private_complexity_sum: 7,
-            data_private_struct_count: 1,
-            behavioral_private_struct_count: 2,
             risk_score: risk,
             ..Default::default()
         },
@@ -244,8 +236,6 @@ fn select_visible_reports_threshold_filters_lower_scores() {
             "src/a.rs".to_string(),
             FileMetrics {
                 effective_loc: 10,
-                private_function_count: 1,
-                private_complexity_sum: 2,
                 risk_score: 12.0,
                 ..Default::default()
             },
@@ -255,9 +245,6 @@ fn select_visible_reports_threshold_filters_lower_scores() {
             "src/b.rs".to_string(),
             FileMetrics {
                 effective_loc: 20,
-                private_function_count: 2,
-                private_complexity_sum: 4,
-                data_private_struct_count: 1,
                 risk_score: 8.0,
                 ..Default::default()
             },
@@ -282,8 +269,6 @@ fn select_visible_reports_top_limits_results() {
             "src/a.rs".to_string(),
             FileMetrics {
                 effective_loc: 10,
-                private_function_count: 1,
-                private_complexity_sum: 1,
                 risk_score: 20.0,
                 ..Default::default()
             },
@@ -293,8 +278,6 @@ fn select_visible_reports_top_limits_results() {
             "src/b.rs".to_string(),
             FileMetrics {
                 effective_loc: 10,
-                private_function_count: 1,
-                private_complexity_sum: 1,
                 risk_score: 15.0,
                 ..Default::default()
             },
@@ -304,8 +287,6 @@ fn select_visible_reports_top_limits_results() {
             "src/c.rs".to_string(),
             FileMetrics {
                 effective_loc: 10,
-                private_function_count: 1,
-                private_complexity_sum: 1,
                 risk_score: 10.0,
                 ..Default::default()
             },

@@ -23,8 +23,6 @@ fn report(file: &str, functions: Vec<PrivateFunctionReport>) -> FileRiskReport {
         FileMetrics {
             functions,
             effective_loc: 366,
-            private_function_count: 9,
-            private_complexity_sum: 31,
             risk_score: 20.87,
             ..Default::default()
         },
@@ -135,10 +133,7 @@ fn render_names_the_helper_structs_when_present() {
             data_structs: vec!["Payload".to_string()],
             behavioral_structs: vec!["Encoder".to_string()],
             effective_loc: 366,
-            private_function_count: 9,
-            private_complexity_sum: 31,
             risk_score: 20.87,
-            ..Default::default()
         },
     );
 

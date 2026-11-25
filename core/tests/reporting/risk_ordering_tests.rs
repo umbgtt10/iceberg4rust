@@ -13,8 +13,6 @@ fn report(file: &str, risk: f64) -> FileRiskReport {
         file.to_string(),
         FileMetrics {
             effective_loc: 100,
-            private_function_count: 4,
-            private_complexity_sum: 6,
             risk_score: risk,
             ..Default::default()
         },

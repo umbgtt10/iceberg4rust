@@ -3,6 +3,23 @@
 // SPDX-License-Identifier: MIT
 
 use iceberg4rust::invocation::analyzer::Analyzer;
+use iceberg4rust::reporting::file_metrics::FileMetrics;
+
+fn complexity_sum(metrics: &FileMetrics) -> u32 {
+    metrics
+        .functions
+        .iter()
+        .map(|function| function.complexity)
+        .sum()
+}
+
+fn hidden_function_count(metrics: &FileMetrics) -> usize {
+    metrics
+        .functions
+        .iter()
+        .filter(|function| function.is_hidden)
+        .count()
+}
 
 // A type whose whole implementation is pub(crate) is untestable from outside the
 // crate, so it carries the same risk as one built from bare `fn` helpers.
@@ -31,8 +48,8 @@ impl Worker {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count, 2);
-    assert_eq!(metrics.private_complexity_sum, 2);
+    assert_eq!(hidden_function_count(&metrics), 2);
+    assert_eq!(complexity_sum(&metrics), 2);
     assert!(metrics.risk_score > 0.0);
 }
 
@@ -60,9 +77,9 @@ mod tests {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count, 1);
-    assert_eq!(metrics.data_private_struct_count, 0);
-    assert_eq!(metrics.behavioral_private_struct_count, 1);
+    assert_eq!(hidden_function_count(&metrics), 1);
+    assert_eq!(metrics.data_structs.len(), 0);
+    assert_eq!(metrics.behavioral_structs.len(), 1);
 }
 
 #[test]
@@ -74,10 +91,10 @@ fn analyze_source_empty_source_returns_zero_metrics() {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count, 0);
-    assert_eq!(metrics.private_complexity_sum, 0);
-    assert_eq!(metrics.data_private_struct_count, 0);
-    assert_eq!(metrics.behavioral_private_struct_count, 0);
+    assert_eq!(hidden_function_count(&metrics), 0);
+    assert_eq!(complexity_sum(&metrics), 0);
+    assert_eq!(metrics.data_structs.len(), 0);
+    assert_eq!(metrics.behavioral_structs.len(), 0);
     assert!(metrics.risk_score.abs() < f64::EPSILON);
 }
 
@@ -97,7 +114,7 @@ impl Worker {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count, 2);
+    assert_eq!(hidden_function_count(&metrics), 2);
     assert!(metrics.risk_score > 0.0);
 }
 
@@ -137,9 +154,9 @@ impl Primary {
         metrics.behavioral_structs,
         vec!["BehaviouralHelper".to_string()]
     );
-    assert_eq!(
-        metrics.data_private_struct_count,
-        metrics.data_structs.len()
+    assert!(
+        (metrics.risk_score - Analyzer::compute_file_risk(metrics.effective_loc, 2, 0, 1, 1)).abs()
+            < f64::EPSILON
     );
 }
 
@@ -176,10 +193,10 @@ impl Worker {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count, 2);
-    assert!(metrics.private_complexity_sum > 0);
-    assert_eq!(metrics.data_private_struct_count, 1);
-    assert_eq!(metrics.behavioral_private_struct_count, 1);
+    assert_eq!(hidden_function_count(&metrics), 2);
+    assert!(complexity_sum(&metrics) > 0);
+    assert_eq!(metrics.data_structs.len(), 1);
+    assert_eq!(metrics.behavioral_structs.len(), 1);
     assert!(metrics.risk_score > 0.0);
 }
 
@@ -202,9 +219,9 @@ impl Manager {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count, 1);
-    assert_eq!(metrics.data_private_struct_count, 1);
-    assert_eq!(metrics.behavioral_private_struct_count, 0);
+    assert_eq!(hidden_function_count(&metrics), 1);
+    assert_eq!(metrics.data_structs.len(), 1);
+    assert_eq!(metrics.behavioral_structs.len(), 0);
 }
 
 #[test]
@@ -224,9 +241,9 @@ impl Engine {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count, 1);
-    assert_eq!(metrics.data_private_struct_count, 0);
-    assert_eq!(metrics.behavioral_private_struct_count, 0);
+    assert_eq!(hidden_function_count(&metrics), 1);
+    assert_eq!(metrics.data_structs.len(), 0);
+    assert_eq!(metrics.behavioral_structs.len(), 0);
 }
 
 #[test]
@@ -258,6 +275,47 @@ impl Worker {
     assert!(metrics.functions[1].complexity > 0);
 }
 
+// A helper struct restricted to the crate is as unreachable from outside as a
+// private one, so it counts toward D or B the same.
+#[test]
+fn analyze_source_scores_pub_crate_helper_structs_the_same_as_private_ones() {
+    // Arrange
+    let private_source = r#"
+pub struct Worker;
+
+struct Helper {
+    seed: u32,
+}
+
+impl Helper {
+    fn assist(&self) -> u32 {
+        self.seed
+    }
+}
+
+impl Worker {
+    fn work(&self) -> u32 {
+        let helper = Helper { seed: 1 };
+        helper.assist()
+    }
+}
+"#;
+    let restricted_source = private_source.replace("struct Helper", "pub(crate) struct Helper");
+
+    // Act
+    let private = Analyzer::new()
+        .analyze_source(private_source)
+        .expect("metrics");
+    let restricted = Analyzer::new()
+        .analyze_source(&restricted_source)
+        .expect("metrics");
+
+    // Assert
+    assert_eq!(restricted.behavioral_structs, vec!["Helper".to_string()]);
+    assert_eq!(private.behavioral_structs, restricted.behavioral_structs);
+    assert!((private.risk_score - restricted.risk_score).abs() < f64::EPSILON);
+}
+
 // Restricting a private helper must not change the score: pub(crate) is not an
 // escape hatch from the measurement, which is the whole point of counting it.
 #[test]
@@ -286,8 +344,8 @@ impl Worker {
 
     // Assert
     assert_eq!(
-        private.private_function_count,
-        restricted.private_function_count
+        hidden_function_count(&private),
+        hidden_function_count(&restricted)
     );
     assert!((private.risk_score - restricted.risk_score).abs() < f64::EPSILON);
 }
@@ -307,9 +365,9 @@ impl FileType {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count, 0);
-    assert_eq!(metrics.data_private_struct_count, 0);
-    assert_eq!(metrics.behavioral_private_struct_count, 0);
+    assert_eq!(hidden_function_count(&metrics), 0);
+    assert_eq!(metrics.data_structs.len(), 0);
+    assert_eq!(metrics.behavioral_structs.len(), 0);
     assert!(metrics.risk_score.abs() < f64::EPSILON);
 }
 
@@ -337,8 +395,8 @@ impl Dispatching for Router {
     let metrics = Analyzer::new().analyze_source(source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count, 0);
-    assert!(metrics.private_complexity_sum > 0);
+    assert_eq!(hidden_function_count(&metrics), 0);
+    assert!(complexity_sum(&metrics) > 0);
     assert!(metrics.risk_score > 0.0);
 }
 
@@ -357,8 +415,8 @@ fn analyze_source_wide_no_op_trait_impl_scores_zero_risk() {
     let metrics = Analyzer::new().analyze_source(&source).expect("metrics");
 
     // Assert
-    assert_eq!(metrics.private_function_count, 0);
-    assert_eq!(metrics.private_complexity_sum, 0);
+    assert_eq!(hidden_function_count(&metrics), 0);
+    assert_eq!(complexity_sum(&metrics), 0);
     assert!(metrics.risk_score.abs() < f64::EPSILON);
 }
 

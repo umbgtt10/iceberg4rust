@@ -4,11 +4,21 @@
 
 use iceberg4rust::reporting::file_metrics::FileMetrics;
 use iceberg4rust::reporting::file_risk_report::FileRiskReport;
+use iceberg4rust::reporting::private_function_report::PrivateFunctionReport;
 use iceberg4rust::reporting::report_selection::ReportSelection;
 use iceberg4rust::traits::report_renderer::ReportRenderer;
 use iceberg4rust_cli::system::json_report_renderer::JsonReportRenderer;
 use serde_json::Value;
 use serde_json::from_str;
+
+fn function(name: &str, complexity: u32, is_hidden: bool) -> PrivateFunctionReport {
+    PrivateFunctionReport {
+        name: name.to_string(),
+        line: 1,
+        complexity,
+        is_hidden,
+    }
+}
 
 fn rendered(reports: &[FileRiskReport], threshold: f64) -> Value {
     let json = JsonReportRenderer::new()
@@ -22,13 +32,16 @@ fn report(package: &str, file: &str, risk: f64) -> FileRiskReport {
         package.to_string(),
         file.to_string(),
         FileMetrics {
+            functions: vec![
+                function("decode", 2, true),
+                function("encode", 4, true),
+                function("verify", 6, true),
+                function("on_event", 0, false),
+            ],
+            data_structs: vec!["Payload".to_string()],
+            behavioral_structs: vec!["Encoder".to_string(), "Decoder".to_string()],
             effective_loc: 223,
-            private_function_count: 63,
-            private_complexity_sum: 12,
-            data_private_struct_count: 1,
-            behavioral_private_struct_count: 2,
             risk_score: risk,
-            ..Default::default()
         },
     )
 }
@@ -46,7 +59,7 @@ fn render_carries_every_metric_field_for_a_file() {
     assert_eq!(file["package_name"], "node");
     assert_eq!(file["relative_file"], "src/a.rs");
     assert_eq!(file["effective_loc"], 223);
-    assert_eq!(file["private_function_count"], 63);
+    assert_eq!(file["private_function_count"], 3);
     assert_eq!(file["private_complexity_sum"], 12);
     assert_eq!(file["data_private_struct_count"], 1);
     assert_eq!(file["behavioral_private_struct_count"], 2);
