@@ -138,6 +138,12 @@ Usage is detected through:
 - explicit local variable types
 - struct literal expressions
 - tuple struct constructor calls
+- a path naming the struct before its last segment: an associated function
+  called, `Helper::new()` or `Helper::default()`, or named as a value,
+  `map(Helper::from_parts)`
+
+A unit struct named by its bare name -- `let helper = Helper;` -- is not
+detected; `docs/OPEN_POINTS.md` records why.
 
 Each matching private struct is counted once per file, not once per use site.
 

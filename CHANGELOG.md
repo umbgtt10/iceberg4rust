@@ -19,6 +19,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   body one level deeper, as Sonar's cognitive complexity does, so a branch
   inside the closure handed to `map` scores 2. `docs/FORMULA.md` lists every
   counted construct, each with its test.
+- A helper struct used only through an associated function counts toward `D`
+  or `B`. `StructUsageCollector` read only a call path's last segment, so
+  `Helper::new()` and `Helper::default()` named `new` and `default`, never
+  `Helper`. The segment before a path's last now counts too, wherever the path
+  stands: `Helper::new()`, `crate::model::Helper::new()`, and
+  `map(Helper::from_parts)`.
 
 ### Changed
 - `ComplexityScorer::score` takes `self` by value, as
