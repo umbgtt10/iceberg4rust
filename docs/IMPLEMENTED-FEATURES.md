@@ -16,7 +16,7 @@ This document describes the feature set currently shipped by
   holding the trait
 - Restricted visibility counts as hidden: `pub(crate)`, `pub(super)`,
   `pub(in path)` and `pub(self)` are unreachable from outside the crate, so only
-  `pub` leaves `P`
+  `pub` leaves `P`, and only `pub` keeps a helper struct out of `D` and `B`
 - Trait-impl complexity still counts toward `sum(C_i)`, and the private structs
   such methods use still count toward `D` and `B`
 - Helper structs are classified as data-only or behavioural, weighted `0.5` and

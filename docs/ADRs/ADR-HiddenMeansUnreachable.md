@@ -33,6 +33,8 @@ visibility modifier. Anyone holding the trait can call them.
 Restricted visibility is **included**. `pub(crate)`, `pub(super)`,
 `pub(in path)` and `pub(self)` are all unreachable from outside the crate, so
 they are hidden by the same test that excludes trait methods. Only `pub` escapes.
+The same test decides which helper structs count toward `D` and `B`: a
+restricted struct is a helper exactly as a bare `struct` is.
 
 Trait-impl methods are still collected. Their complexity counts toward
 `sum(C_i)` and the private structs they use count toward `D` and `B`. Breadth of
@@ -111,6 +113,11 @@ matters: the same source scores identically whether a helper is written `fn` or
 `pub(crate) fn`.
 `tests/analyzer_tests.rs` pins the two ends: a 63-method no-op trait impl scores
 zero, and a trait impl carrying branching still scores.
+`PrivateHelperClassifier::try_insert_data_struct` matches the same two
+visibilities for a helper struct; `tests/private_helper_classifier_tests.rs`
+pins each restricted form, and `tests/analyzer_tests.rs` that a file scores
+identically whether its helper struct is written `struct` or
+`pub(crate) struct`.
 
 ## Related
 

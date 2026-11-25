@@ -258,6 +258,47 @@ impl Worker {
     assert!(metrics.functions[1].complexity > 0);
 }
 
+// A helper struct restricted to the crate is as unreachable from outside as a
+// private one, so it counts toward D or B the same.
+#[test]
+fn analyze_source_scores_pub_crate_helper_structs_the_same_as_private_ones() {
+    // Arrange
+    let private_source = r#"
+pub struct Worker;
+
+struct Helper {
+    seed: u32,
+}
+
+impl Helper {
+    fn assist(&self) -> u32 {
+        self.seed
+    }
+}
+
+impl Worker {
+    fn work(&self) -> u32 {
+        let helper = Helper { seed: 1 };
+        helper.assist()
+    }
+}
+"#;
+    let restricted_source = private_source.replace("struct Helper", "pub(crate) struct Helper");
+
+    // Act
+    let private = Analyzer::new()
+        .analyze_source(private_source)
+        .expect("metrics");
+    let restricted = Analyzer::new()
+        .analyze_source(&restricted_source)
+        .expect("metrics");
+
+    // Assert
+    assert_eq!(restricted.behavioral_structs, vec!["Helper".to_string()]);
+    assert_eq!(private.behavioral_structs, restricted.behavioral_structs);
+    assert!((private.risk_score - restricted.risk_score).abs() < f64::EPSILON);
+}
+
 // Restricting a private helper must not change the score: pub(crate) is not an
 // escape hatch from the measurement, which is the whole point of counting it.
 #[test]

@@ -25,6 +25,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `Helper`. The segment before a path's last now counts too, wherever the path
   stands: `Helper::new()`, `crate::model::Helper::new()`, and
   `map(Helper::from_parts)`.
+- A `pub(crate)`, `pub(super)`, `pub(in path)` or `pub(self)` helper struct
+  counts toward `D` or `B`. `PrivateHelperClassifier` took only a struct with
+  no visibility keyword for a helper, so restricting one took it out of the
+  score, the escape 0.2.0 closed for functions; `docs/FORMULA.md` and
+  `ADR-HiddenMeansUnreachable` already said only `pub` escapes.
 
 ### Changed
 - `ComplexityScorer::score` takes `self` by value, as

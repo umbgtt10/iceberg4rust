@@ -122,6 +122,11 @@ recursion. Not seen: the arguments of a macro invocation -- `assert!`,
 
 The file's primary struct is the first top-level struct declared in the file.
 
+A private struct is one that is not `pub`, by the same test as `P`: a
+`pub(crate)`, `pub(super)`, `pub(in path)` or `pub(self)` struct is as
+unreachable from outside the crate as a bare `struct`, so it counts. Only `pub`
+escapes.
+
 Additional private structs are split into two classes.
 
 #### Data-Only Private Structs

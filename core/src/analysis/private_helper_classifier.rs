@@ -78,8 +78,10 @@ impl PrivateHelperClassifier {
 
     fn try_insert_data_struct(&mut self, item_struct: &ItemStruct, primary_struct: Option<&str>) {
         let name = item_struct.ident.to_string();
-        if matches!(item_struct.vis, Visibility::Inherited)
-            && primary_struct.is_none_or(|primary| primary != name)
+        if matches!(
+            item_struct.vis,
+            Visibility::Inherited | Visibility::Restricted(_)
+        ) && primary_struct.is_none_or(|primary| primary != name)
         {
             self.helper_structs.insert(name, HelperStructKind::Data);
         }

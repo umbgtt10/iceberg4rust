@@ -145,6 +145,52 @@ impl Beta {
 }
 
 #[test]
+fn new_every_restricted_visibility_struct_is_a_helper() {
+    // Arrange
+    let items = parse_items(
+        r#"
+pub struct Worker;
+pub(crate) struct CrateHelper;
+pub(super) struct SuperHelper;
+pub(in crate::model) struct PathHelper;
+pub(self) struct SelfHelper;
+"#,
+    );
+
+    // Act
+    let map = PrivateHelperClassifier::new(&items, None).into_map();
+
+    // Assert
+    assert_eq!(map.len(), 4);
+    assert_eq!(map.get("CrateHelper"), Some(&HelperStructKind::Data));
+    assert_eq!(map.get("SuperHelper"), Some(&HelperStructKind::Data));
+    assert_eq!(map.get("PathHelper"), Some(&HelperStructKind::Data));
+    assert_eq!(map.get("SelfHelper"), Some(&HelperStructKind::Data));
+}
+
+#[test]
+fn new_pub_crate_struct_with_methods_is_behavioral() {
+    // Arrange
+    let items = parse_items(
+        r#"
+pub struct Worker;
+pub(crate) struct Helper;
+
+impl Helper {
+    fn assist() {}
+}
+"#,
+    );
+
+    // Act
+    let map = PrivateHelperClassifier::new(&items, None).into_map();
+
+    // Assert
+    assert_eq!(map.len(), 1);
+    assert_eq!(map.get("Helper"), Some(&HelperStructKind::Behavioral));
+}
+
+#[test]
 fn primary_struct_is_excluded() {
     // Arrange
     let items = parse_items(
