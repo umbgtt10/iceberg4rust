@@ -126,6 +126,159 @@ fn nested_if_increments_nesting() {
 }
 
 #[test]
+fn score_binary_operand_holding_an_if_adds_the_if_score() {
+    // Arrange & Act
+    let score = score_block("let x = 1 + if a { 1 } else { 2 };");
+
+    // Assert
+    assert_eq!(score, 1);
+}
+
+#[test]
+fn score_block_expression_holding_an_if_adds_the_if_score() {
+    // Arrange & Act
+    let score = score_block("{ if a {} }");
+
+    // Assert
+    assert_eq!(score, 1);
+}
+
+#[test]
+fn score_call_argument_holding_an_if_adds_the_if_score() {
+    // Arrange & Act
+    let score = score_block("consume(if a { 1 } else { 2 });");
+
+    // Assert
+    assert_eq!(score, 1);
+}
+
+#[test]
+fn score_for_loop_body_holding_an_if_scores_it_one_level_deeper() {
+    // Arrange & Act
+    let score = score_block("for _ in 0..1 { if a {} }");
+
+    // Assert
+    assert_eq!(score, 3);
+}
+
+#[test]
+fn score_for_loop_inside_an_if_adds_its_nesting() {
+    // Arrange & Act
+    let score = score_block("if a { for _ in 0..1 {} }");
+
+    // Assert
+    assert_eq!(score, 3);
+}
+
+#[test]
+fn score_for_loop_over_a_match_adds_the_match_score() {
+    // Arrange & Act
+    let score = score_block("for _ in match x { _ => 0..1 } {}");
+
+    // Assert
+    assert_eq!(score, 2);
+}
+
+#[test]
+fn score_if_condition_holding_a_match_adds_the_match_score() {
+    // Arrange & Act
+    let score = score_block("if match x { _ => true } {}");
+
+    // Assert
+    assert_eq!(score, 2);
+}
+
+#[test]
+fn score_loop_body_holding_an_if_scores_it_one_level_deeper() {
+    // Arrange & Act
+    let score = score_block("loop { if a {} }");
+
+    // Assert
+    assert_eq!(score, 3);
+}
+
+#[test]
+fn score_loop_inside_an_if_adds_its_nesting() {
+    // Arrange & Act
+    let score = score_block("if a { loop {} }");
+
+    // Assert
+    assert_eq!(score, 3);
+}
+
+#[test]
+fn score_match_arm_holding_an_if_scores_it_one_level_deeper() {
+    // Arrange & Act
+    let score = score_block("match x { 1 => if a {}, _ => {} }");
+
+    // Assert
+    assert_eq!(score, 3);
+}
+
+#[test]
+fn score_match_scrutinee_holding_an_if_adds_the_if_score() {
+    // Arrange & Act
+    let score = score_block("match if a { 1 } else { 2 } { _ => {} }");
+
+    // Assert
+    assert_eq!(score, 2);
+}
+
+#[test]
+fn score_nested_fn_adds_its_body_score() {
+    // Arrange & Act
+    let score = score_block("fn inner() { if a {} if b {} }");
+
+    // Assert
+    assert_eq!(score, 2);
+}
+
+#[test]
+fn score_nested_impl_method_adds_its_body_score() {
+    // Arrange & Act
+    let score = score_block("impl Local { fn inner(&self) { if a {} if b {} } }");
+
+    // Assert
+    assert_eq!(score, 2);
+}
+
+#[test]
+fn score_nested_module_fn_adds_its_body_score() {
+    // Arrange & Act
+    let score = score_block("mod local { fn inner() { if a {} if b {} } }");
+
+    // Assert
+    assert_eq!(score, 2);
+}
+
+#[test]
+fn score_while_loop_body_holding_an_if_scores_it_one_level_deeper() {
+    // Arrange & Act
+    let score = score_block("while b { if a {} }");
+
+    // Assert
+    assert_eq!(score, 3);
+}
+
+#[test]
+fn score_while_loop_inside_an_if_adds_its_nesting() {
+    // Arrange & Act
+    let score = score_block("if a { while b {} }");
+
+    // Assert
+    assert_eq!(score, 3);
+}
+
+#[test]
+fn score_while_loop_over_a_match_condition_adds_the_match_score() {
+    // Arrange & Act
+    let score = score_block("while match x { _ => true } {}");
+
+    // Assert
+    assert_eq!(score, 2);
+}
+
+#[test]
 fn single_if_adds_one() {
     // Arrange & Act
     let score = score_block("if true {}");
