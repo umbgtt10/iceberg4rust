@@ -58,8 +58,6 @@ impl Analyzer {
             &helper_structs,
             HelperStructKind::Behavioral,
         );
-        let data_private_struct_count = data_structs.len();
-        let behavioral_private_struct_count = behavioral_structs.len();
 
         let functions = private_functions
             .iter()
@@ -74,8 +72,8 @@ impl Analyzer {
             effective_loc,
             private_function_count,
             private_complexity_sum,
-            data_private_struct_count,
-            behavioral_private_struct_count,
+            data_structs.len(),
+            behavioral_structs.len(),
         );
 
         Ok(FileMetrics {
@@ -83,10 +81,6 @@ impl Analyzer {
             data_structs,
             behavioral_structs,
             effective_loc,
-            private_function_count,
-            private_complexity_sum,
-            data_private_struct_count,
-            behavioral_private_struct_count,
             risk_score,
         })
     }

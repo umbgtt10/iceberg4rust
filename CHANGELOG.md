@@ -34,6 +34,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 - `ComplexityScorer::score` takes `self` by value, as
   `PrivateFunctionCollector::collect` does: the scorer is the walk's state.
+- `FileMetrics` and `FileRiskReport` no longer store a count next to the list
+  it counts: `private_function_count`, `private_complexity_sum`,
+  `data_private_struct_count` and `behavioral_private_struct_count` leave
+  `FileMetrics`, and `FileRiskReport`'s getters of those names count
+  `functions` (the hidden ones), sum their complexity, and count `data_structs`
+  and `behavioral_structs`. A count could disagree with its list; now it
+  cannot. The console report and the `--json` fields are unchanged.
 
 ## [0.4.0] - 2026-10-27
 
