@@ -87,6 +87,19 @@ fn new_creates_stripper_with_no_active_block_comment() {
 }
 
 #[test]
+fn strip_block_comment_closed_after_text_keeps_what_follows() {
+    // Arrange
+    let mut stripper = CommentStripper::new();
+    let line = "abc/**/d";
+
+    // Act
+    let result = stripper.strip(line);
+
+    // Assert
+    assert_eq!(result, "abcd");
+}
+
+#[test]
 fn strip_block_comment_continues_across_lines() {
     // Arrange
     let mut stripper = CommentStripper::new();
@@ -155,6 +168,19 @@ fn strip_line_comment_removes_from_double_slash() {
 
     // Assert
     assert_eq!(result, "let x = 42; ");
+}
+
+#[test]
+fn strip_line_ending_in_a_slash_keeps_it() {
+    // Arrange
+    let mut stripper = CommentStripper::new();
+    let line = "a /";
+
+    // Act
+    let result = stripper.strip(line);
+
+    // Assert
+    assert_eq!(result, "a /");
 }
 
 #[test]

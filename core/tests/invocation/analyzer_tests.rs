@@ -208,6 +208,28 @@ impl Manager {
 }
 
 #[test]
+fn analyze_source_private_first_struct_is_not_counted_as_a_helper() {
+    // Arrange
+    let source = r#"
+struct Engine;
+
+impl Engine {
+    fn build() -> Engine {
+        Engine
+    }
+}
+"#;
+
+    // Act
+    let metrics = Analyzer::new().analyze_source(source).expect("metrics");
+
+    // Assert
+    assert_eq!(metrics.private_function_count, 1);
+    assert_eq!(metrics.data_private_struct_count, 0);
+    assert_eq!(metrics.behavioral_private_struct_count, 0);
+}
+
+#[test]
 fn analyze_source_reports_each_private_function_by_name_line_and_complexity() {
     // Arrange
     let source = r#"
@@ -351,6 +373,15 @@ fn compute_file_risk_behavioral_structs_weigh_more_than_data_structs() {
 
     // Assert
     assert!(comparison);
+}
+
+#[test]
+fn compute_file_risk_every_term_weighted_as_the_formula_states_returns_its_value() {
+    // Arrange & Act
+    let risk = Analyzer::compute_file_risk(3, 1, 2, 2, 1);
+
+    // Assert
+    assert!((risk - 1.0).abs() < f64::EPSILON);
 }
 
 #[test]
