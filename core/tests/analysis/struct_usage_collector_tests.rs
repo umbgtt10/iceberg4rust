@@ -36,6 +36,18 @@ fn helpers_with(names: &[&str], kind: HelperStructKind) -> BTreeMap<String, Help
 }
 
 #[test]
+fn collect_used_private_structs_tuple_struct_constructor_call_is_detected() {
+    // Arrange
+    let helpers = helpers_with(&["Wrapper"], HelperStructKind::Data);
+
+    // Act
+    let used = collect_used("fn foo() { let wrapped = Wrapper(1); }", &helpers);
+
+    // Assert
+    assert_eq!(used, vec!["Wrapper"]);
+}
+
+#[test]
 fn empty_body_returns_empty() {
     // Arrange
     let helpers = empty_helpers();
