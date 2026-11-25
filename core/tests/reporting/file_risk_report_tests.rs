@@ -7,6 +7,25 @@ use iceberg4rust::reporting::file_risk_report::FileRiskReport;
 use iceberg4rust::reporting::private_function_report::PrivateFunctionReport;
 
 #[test]
+fn data_private_struct_count_of_several_structs_returns_their_number() {
+    // Arrange
+    let report = FileRiskReport::new(
+        "pkg".to_string(),
+        "src/lib.rs".to_string(),
+        FileMetrics {
+            data_private_struct_count: 3,
+            ..Default::default()
+        },
+    );
+
+    // Act
+    let count = report.data_private_struct_count();
+
+    // Assert
+    assert_eq!(count, 3);
+}
+
+#[test]
 fn file_risk_report_clone_produces_independent_copy() {
     // Arrange
     let report = FileRiskReport::new(

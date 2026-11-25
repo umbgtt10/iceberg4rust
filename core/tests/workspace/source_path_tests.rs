@@ -48,6 +48,19 @@ fn eq_with_a_trailing_separator_is_the_same_path() {
 }
 
 #[test]
+fn eq_with_another_last_component_is_another_path() {
+    // Arrange
+    let source = path("/p/src");
+    let library = path("/p/lib");
+
+    // Act
+    let same = source == library;
+
+    // Assert
+    assert!(!same);
+}
+
+#[test]
 fn extension_of_a_dotfile_returns_none() {
     // Arrange
     let source = path("/p/.rs");
@@ -174,6 +187,19 @@ fn parent_of_the_root_returns_none() {
 
     // Assert
     assert_eq!(parent, None);
+}
+
+#[test]
+fn partial_cmp_orders_paths_as_cmp_does() {
+    // Arrange
+    let nested = path("/a/b");
+    let sibling = path("/a-b");
+
+    // Act
+    let order = nested.partial_cmp(&sibling);
+
+    // Assert
+    assert_eq!(order, Some(Ordering::Less));
 }
 
 #[test]

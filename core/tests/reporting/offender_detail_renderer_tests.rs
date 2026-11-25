@@ -89,6 +89,26 @@ fn render_marks_a_function_that_does_not_count_toward_the_private_surface() {
 }
 
 #[test]
+fn render_names_the_data_structs_when_no_behavioral_one_is_present() {
+    // Arrange
+    let offender = FileRiskReport::new(
+        "node".to_string(),
+        "src/builder.rs".to_string(),
+        FileMetrics {
+            functions: vec![function("build", 10, 2, true)],
+            data_structs: vec!["Payload".to_string()],
+            ..Default::default()
+        },
+    );
+
+    // Act
+    let rendered = OffenderDetailRenderer::render(&[&offender]);
+
+    // Assert
+    assert!(rendered.contains("helper structs: data=[Payload]  behavioral=[]"));
+}
+
+#[test]
 fn render_names_the_file_and_its_risk() {
     // Arrange
     let offender = report(
