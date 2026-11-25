@@ -3,22 +3,19 @@
 // SPDX-License-Identifier: MIT
 
 use alloc::string::String;
-use alloc::vec::Vec;
 
-const LINE_COMMENT_START: [char; 2] = ['/', '/'];
-const BLOCK_COMMENT_START: [char; 2] = ['/', '*'];
-const BLOCK_COMMENT_END: [char; 2] = ['*', '/'];
+const LINE_COMMENT_START: (char, Option<char>) = ('/', Some('/'));
+const BLOCK_COMMENT_START: (char, Option<char>) = ('/', Some('*'));
+const BLOCK_COMMENT_END: (char, Option<char>) = ('*', Some('/'));
 
 #[derive(Default)]
 pub struct CommentStripper {
-    in_block_comment: bool,
+    depth: usize,
 }
 
 impl CommentStripper {
     pub fn new() -> Self {
-        Self {
-            in_block_comment: false,
-        }
+        Self { depth: 0 }
     }
 
     pub fn count_effective_loc(source: &str) -> usize {
@@ -37,42 +34,24 @@ impl CommentStripper {
 
     pub fn strip(&mut self, line: &str) -> String {
         let mut result = String::new();
-        let chars: Vec<char> = line.chars().collect();
-        let mut index = 0;
+        let mut chars = line.chars().peekable();
 
-        while index < chars.len() {
-            if self.in_block_comment {
-                index = self.skip_block_comment_end(&chars, index);
-                continue;
+        while let Some(current) = chars.next() {
+            match (current, chars.peek().copied()) {
+                BLOCK_COMMENT_START => {
+                    self.depth += 1;
+                    chars.next();
+                }
+                BLOCK_COMMENT_END if self.depth > 0 => {
+                    self.depth -= 1;
+                    chars.next();
+                }
+                _ if self.depth > 0 => {}
+                LINE_COMMENT_START => break,
+                _ => result.push(current),
             }
-
-            if Self::pair_at(&chars, index, LINE_COMMENT_START) {
-                break;
-            }
-
-            if Self::pair_at(&chars, index, BLOCK_COMMENT_START) {
-                self.in_block_comment = true;
-                index += 2;
-                continue;
-            }
-
-            result.push(chars[index]);
-            index += 1;
         }
 
         result
-    }
-
-    fn pair_at(chars: &[char], index: usize, pair: [char; 2]) -> bool {
-        index + 1 < chars.len() && chars[index] == pair[0] && chars[index + 1] == pair[1]
-    }
-
-    fn skip_block_comment_end(&mut self, chars: &[char], index: usize) -> usize {
-        if Self::pair_at(chars, index, BLOCK_COMMENT_END) {
-            self.in_block_comment = false;
-            index + 2
-        } else {
-            index + 1
-        }
     }
 }

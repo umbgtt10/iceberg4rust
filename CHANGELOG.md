@@ -30,6 +30,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   no visibility keyword for a helper, so restricting one took it out of the
   score, the escape 0.2.0 closed for functions; `docs/FORMULA.md` and
   `ADR-HiddenMeansUnreachable` already said only `pub` escapes.
+- `L` follows nested block comments. `CommentStripper` closed a block comment
+  at its first `*/`, so `/* a /* b */ c */ d` stripped to ` c */ d` and the
+  tail of a nested comment counted as code. It now tracks the nesting depth,
+  over the line's characters with no index of its own to move.
 
 ### Changed
 - `ComplexityScorer::score` takes `self` by value, as

@@ -44,6 +44,10 @@ the score.
 
 `L` is computed from production source only and counts non-blank, non-comment lines.
 
+Block comments nest as Rust's do: `/* a /* b */ c */ d` is a comment up to its
+second `*/`, leaving ` d`. Comment markers are read without lexing string
+literals, so a `//` or `/*` inside a string is taken for a comment.
+
 ### Private Functions
 
 `P` counts:

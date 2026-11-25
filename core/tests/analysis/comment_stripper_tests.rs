@@ -50,6 +50,18 @@ fn count_effective_loc_mixed_comments_and_code() {
 }
 
 #[test]
+fn count_effective_loc_nested_block_comment_across_lines() {
+    // Arrange
+    let source = "/* outer\n/* inner */\nstill outer */\nlet x = 1;\n";
+
+    // Act
+    let count = CommentStripper::count_effective_loc(source);
+
+    // Assert
+    assert_eq!(count, 1);
+}
+
+#[test]
 fn count_effective_loc_only_comments_and_blanks_returns_zero() {
     // Arrange
     let source = "\n// comment\n/* block */\n\n  \n";
@@ -119,6 +131,19 @@ fn strip_block_comment_continues_across_lines() {
 }
 
 #[test]
+fn strip_block_comment_opened_by_slash_star_slash_stays_open() {
+    // Arrange
+    let mut stripper = CommentStripper::new();
+    let line = "/*/ a */ b";
+
+    // Act
+    let result = stripper.strip(line);
+
+    // Assert
+    assert_eq!(result, " b");
+}
+
+#[test]
 fn strip_block_comment_start_removes_from_slash_star() {
     // Arrange
     let mut stripper = CommentStripper::new();
@@ -184,6 +209,38 @@ fn strip_line_ending_in_a_slash_keeps_it() {
 }
 
 #[test]
+fn strip_nested_block_comment_closes_at_its_outer_end() {
+    // Arrange
+    let mut stripper = CommentStripper::new();
+    let line = "/* a /* b */ c */ d";
+
+    // Act
+    let result = stripper.strip(line);
+
+    // Assert
+    assert_eq!(result, " d");
+}
+
+#[test]
+fn strip_nested_block_comment_continues_across_lines() {
+    // Arrange
+    let mut stripper = CommentStripper::new();
+    let line1 = "x /* a /* b";
+    let line2 = "c */ d";
+    let line3 = "e */ f";
+
+    // Act
+    let r1 = stripper.strip(line1);
+    let r2 = stripper.strip(line2);
+    let r3 = stripper.strip(line3);
+
+    // Assert
+    assert_eq!(r1, "x ");
+    assert_eq!(r2, "");
+    assert_eq!(r3, " f");
+}
+
+#[test]
 fn strip_no_comment_preserves_line() {
     // Arrange
     let mut stripper = CommentStripper::new();
@@ -207,4 +264,17 @@ fn strip_slash_in_string_is_treated_as_line_comment() {
 
     // Assert
     assert_eq!(result, "let s = \"hello ");
+}
+
+#[test]
+fn strip_star_slash_outside_a_comment_is_kept() {
+    // Arrange
+    let mut stripper = CommentStripper::new();
+    let line = "a */ b /* c */ d";
+
+    // Act
+    let result = stripper.strip(line);
+
+    // Assert
+    assert_eq!(result, "a */ b  d");
 }
