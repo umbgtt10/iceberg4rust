@@ -18,13 +18,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `StructUsageCollector::collect_used_private_structs` and
   `TestAttrChecker::has_test_attrs` take syn 3's syntax tree. The workspace's
   dependency tree drops its second copy of syn.
-- The gates come from serge4rust 0.3.2, the house's gates as a library, from
+- The gates come from serge4rust 0.3.3, the house's gates as a library, from
   crates.io: every gate, the stage that runs them, the command runner, their
   failures, crap4rust's report and the commit scoring. `xtask` keeps `main.rs`,
   which configures them with this repository's constants, and the one gate
   that is this tool's alone, the self-analysis, with its tests. Stage 2 runs
   the same eight gates in the same order with the same verdicts; a failing
-  gate says so in serge4rust's words. No published crate changes.
+  gate says so in serge4rust's words, and says how a run that could not run
+  ended plainly: the self-analysis says `could not run, exit code 1` where it
+  said `exit code Some(1)`, and `could not run, terminated by signal` where it
+  said `exit code None`. No published crate changes.
 
 ### Added
 - `[workspace.metadata.ripe4rust]` names both stages as the gates an upgrade

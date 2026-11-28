@@ -163,8 +163,9 @@ installing. It is the one gate that is this repository's own,
 `xtask/src/gates/self_gate.rs`, and it runs `cargo run --quiet --bin
 cargo-iceberg4rust` -- the binary built from this checkout, not an installed
 release, so a change to the analysis is measured by itself in the same run.
-Exit code 2, offenders found, fails it as above the ceiling; any other non-zero
-code as unable to run.
+Exit code 2, offenders found, fails it as above the ceiling; any other exit
+code, or a signal, fails it as could not run, said plainly in serge4rust's
+words: `could not run, exit code 1`, `could not run, terminated by signal`.
 
 The self-gate ceiling, `--threshold 9.5`, is a ratchet set just above the
 current worst file, not at the shipped default — a default-sized bound would
@@ -207,7 +208,7 @@ orchestration in Rust rather than shell text-parsing. `.github/workflows/ci.yml`
 runs both stages on all three for every pull request and every push to `main`.
 
 The gates come from serge4rust, the house's gates as a library, from crates.io
-as `serge4rust = "0.3.2"`: the gates, the stage that runs them, the command
+as `serge4rust = "0.3.3"`: the gates, the stage that runs them, the command
 runner, the failures, crap4rust's report and the commit scoring. `xtask` keeps
 `main.rs`, which configures them with this repository's constants, and the one
 gate that is this tool's alone -- the self-analysis, `gates/self_gate.rs`, on
