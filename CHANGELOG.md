@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Changed
+- `iceberg4rust-core` depends on syn 3, 3.0.10, where it depended on syn 2.
+  The analysis is unchanged: no line of the code changed to take it, and the
+  command's text and `--json` reports and exit codes, at the default threshold
+  and at `--threshold 0`, are byte-identical on syn 2 and syn 3 over four
+  workspaces -- this repository's own and three others of the same family. The
+  library's API names syn's types, so a dependent moves with it:
+  `ParseFailure::cause` is a `syn::Error`, and `ComplexityScorer::score`,
+  `PrivateFunctionCollector::collect`, `PrivateHelperClassifier::new`,
+  `StructUsageCollector::collect_used_private_structs` and
+  `TestAttrChecker::has_test_attrs` take syn 3's syntax tree. The workspace's
+  dependency tree drops its second copy of syn.
 - The gates come from serge4rust 0.3.2, the house's gates as a library, from
   crates.io: every gate, the stage that runs them, the command runner, their
   failures, crap4rust's report and the commit scoring. `xtask` keeps `main.rs`,
