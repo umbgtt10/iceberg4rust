@@ -5,7 +5,7 @@ This document describes the feature set currently shipped by
 [FORMULA.md](FORMULA.md); for released versions, see
 [CHANGELOG.md](../CHANGELOG.md).
 
-## Version 0.5.0
+## Version 0.6.0
 
 ### Analysis
 
@@ -72,6 +72,7 @@ This document describes the feature set currently shipped by
 - Two crates, since 0.4.0: the command publishes as `cargo-iceberg4rust`, and
   the analysis, library `iceberg4rust`, as `iceberg4rust-core` -- see the
   [CHANGELOG](../CHANGELOG.md)
+- `iceberg4rust-core`'s API names syn 3's types, since 0.6.0
 - Invoked as `cargo iceberg4rust`; the subcommand name cargo inserts at `argv[1]`
   is stripped conditionally, so direct invocation is unaffected and a package
   legitimately named `iceberg4rust` survives as a `--package` value

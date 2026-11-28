@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-28
+
+Breaking for the library, not for the command. `iceberg4rust-core` moves from
+syn 2 to syn 3, and its public API names syn's types, so a dependent moves to
+syn 3 with it; the signatures that change are below under Changed. A dependent
+already on syn 3 gets one syn in its tree where it had two, and hands the
+library its own syntax trees. The command gains nothing and loses nothing: its
+scores, its text and `--json` reports and its exit codes are those of 0.5.0,
+so a threshold set against 0.5.0 holds.
+
 ### Changed
 - `iceberg4rust-core` depends on syn 3, 3.0.10, where it depended on syn 2.
   The analysis is unchanged: no line of the code changed to take it, and the
