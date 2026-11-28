@@ -32,7 +32,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 - `[workspace.metadata.ripe4rust]` names both stages as the gates an upgrade
   is held to, and `just ripe` prints ripe4rust's plan of which upgrades are
-  ripe: information, nothing applied.
+  ripe: information, nothing applied. Its `published` names
+  `iceberg4rust-core`, so a breaking upgrade of a crate in that library's
+  public API is asked about as a breaking change of its own.
 
 ## [0.5.0] - 2026-11-25
 

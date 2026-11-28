@@ -239,7 +239,11 @@ where a clone asks it to: `just hooks`, once a clone, on each machine.
 ### Upgrades are planned by ripe4rust
 
 `[workspace.metadata.ripe4rust]` in the root `Cargo.toml` names the gates an
-upgrade is held to: `just stage1` and `just stage2`, as every change is.
+upgrade is held to: `just stage1` and `just stage2`, as every change is. Its
+`published` names `iceberg4rust-core`, the library others depend on, so a
+breaking upgrade of a crate in its public API -- syn's types are -- is asked
+about as a breaking change of its own. `cargo-iceberg4rust` is published too,
+but as a subcommand: no one builds against its library.
 `just ripe` runs `cargo ripe4rust plan`, which says which upgrades -- of a
 dependency or of the toolchain -- are ripe and which need asking about. The
 plan is information: it applies nothing.
