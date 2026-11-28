@@ -6,9 +6,11 @@ entry states what was actually observed, not what is suspected.
 ## A unit struct used by bare name is not detected
 
 `StructUsageCollector` visits struct literals (`Expr::Struct`), constructor calls
-(`ExprCall`), type paths and return types. A unit struct referenced by its bare
-name — `let helper = BehaviouralHelper;` — is an `Expr::Path`, which is not
-visited, so the struct does not count toward `D` or `B`.
+(`ExprCall`), type paths, return types, and the segment before the last of an
+expression path (`Expr::Path`), as in `Helper::new`. A unit struct referenced by
+its bare name — `let helper = BehaviouralHelper;` — is an `Expr::Path` of one
+segment, which has no segment before its last, so the struct does not count
+toward `D` or `B`.
 
 Observed while writing `analyze_source_names_the_helper_structs_it_counted`: a
 fixture using a unit struct reported zero behavioural structs where one was
@@ -18,9 +20,9 @@ change.
 
 The effect is under-reporting, which is the wrong direction for a gate — a file
 using several unit-struct helpers is charged less than one using the same number
-of fielded helpers. Not started. The fix is a `visit_expr_path` arm, with care
-taken that a path naming a *type* in expression position is distinguished from an
-ordinary variable of the same name.
+of fielded helpers. Not started. The fix is reading a one-segment path in
+`visit_expr_path`, with care taken that a path naming a *type* in expression
+position is distinguished from an ordinary variable of the same name.
 
 ## `P` and `sum(C_i)` charge complexity twice
 

@@ -153,8 +153,6 @@ fn run_stage2() -> ExitCode {
     // corrections edit manifests only, so they move nothing the gates behind it
     // measure, and it costs a second.
     let shear = ShearGate::new(&runner, manifest_path.clone());
-    // Last in stage 2: its advisories change without the code changing (see DenyGate).
-    let deny = DenyGate::new(&runner, manifest_path.clone(), DENY_FETCH_ATTEMPTS);
 
     // Fourth, for the same reason stern4rust runs early: removing a duplicate
     // moves code between files, which changes what the three behind it measure.
@@ -183,11 +181,14 @@ fn run_stage2() -> ExitCode {
     let twin = TwinGate::new(&runner, manifest_path.clone(), packages.clone());
     let self_gate = SelfGate::new(
         &runner,
-        manifest_path,
+        manifest_path.clone(),
         String::from(CLI_PACKAGE),
         packages,
         String::from(SELF_GATE_THRESHOLD),
     );
+
+    // Last: its advisories change without the code changing (see DenyGate).
+    let deny = DenyGate::new(&runner, manifest_path, DENY_FETCH_ATTEMPTS);
 
     let gates: Vec<&dyn Gate> = vec![
         &boundary, &stern, &shear, &dry, &crap, &twin, &self_gate, &deny,

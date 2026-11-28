@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+- The gates come from serge4rust 0.3.2, the house's gates as a library, from
+  crates.io: every gate, the stage that runs them, the command runner, their
+  failures, crap4rust's report and the commit scoring. `xtask` keeps `main.rs`,
+  which configures them with this repository's constants, and the one gate
+  that is this tool's alone, the self-analysis, with its tests. Stage 2 runs
+  the same eight gates in the same order with the same verdicts; a failing
+  gate says so in serge4rust's words. No published crate changes.
+
+### Added
+- `[workspace.metadata.ripe4rust]` names both stages as the gates an upgrade
+  is held to, and `just ripe` prints ripe4rust's plan of which upgrades are
+  ripe: information, nothing applied.
+
 ## [0.5.0] - 2026-11-25
 
 Scores move. A gate that passes on 0.4.0 may fail on 0.5.0 without the code

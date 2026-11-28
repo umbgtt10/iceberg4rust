@@ -79,7 +79,7 @@ gates in this order:
 | `cargo dry4rust` | did this change add duplicated code |
 | `cargo crap4rust` | is any function complex and untested |
 | `cargo twin4rust` | does every source file have a mirrored test file |
-| `cargo iceberg4rust` | is any file's private implementation risk too high |
+| `cargo run --bin cargo-iceberg4rust` | is any file's private implementation risk too high, in this tool's own three packages |
 | `cargo deny` | do the dependencies carry an advisory, a refused licence or a foreign source |
 
 `just stage1` starts with `just sync`: `cargo update`, every dependency to its
@@ -106,15 +106,16 @@ stern4rust runs **second** because its corrections are renames, file moves and
 directory splits: a layout it is about to reject is a layout the others would
 have measured for nothing. Its findings are also the cheapest to act on.
 
-All twenty-four of its rules are enforced, with nothing skipped, nothing
-selected and nothing unconfigured: `stern4rust.toml` carries no `skip` and no
-`rules` list, and there is no stern baseline. That includes `returned-mutations`
-(0.14.0): no `&mut` parameter in `src/`, so a helper returns what it built
-rather than writing it through an argument. `docs/header.txt` holds the
-three-line header every `.rs` file carries and `stern4rust.toml` names it -- in
-the config rather than the gate script, so a hand-run of `cargo stern4rust`
-checks exactly what the gate checks. `spdx-matches-manifest` reads `license`
-from each member's manifest, inherited from `[workspace.package]`.
+All thirty-nine of its rules (cargo-stern4rust 0.24.0) are enforced, with
+nothing skipped, nothing selected and nothing unconfigured: `stern4rust.toml`
+carries no `skip` and no `rules` list, and there is no stern baseline. That
+includes `returned-mutations` (0.14.0): no `&mut` parameter in `src/`, so a
+helper returns what it built rather than writing it through an argument.
+`docs/header.txt` holds the three-line header every `.rs` file carries and
+`stern4rust.toml` names it -- in the config rather than the gate script, so a
+hand-run of `cargo stern4rust` checks exactly what the gate checks.
+`spdx-matches-manifest` reads `license` from each member's manifest, inherited
+from `[workspace.package]`.
 
 cargo-shear runs **third**: its corrections edit manifests only -- a
 dependency removed, or moved to the section that uses it -- so they change
@@ -154,6 +155,22 @@ Re-record the baseline only to drop groups that are gone, never to admit new
 ones, and at the same floor -- a baseline matches only at the floor it was
 recorded at: `cargo dry4rust --path "$PWD" --exclude "$PWD/xtask" --exclude "$PWD/core/tests" --exclude "$PWD/cli/tests" --min-nodes 25 --baseline "$PWD/dry4rust-baseline.json" baseline`.
 
+crap4rust runs **fifth** and twin4rust **sixth**, over all three packages.
+
+The self-analysis runs **seventh**: `iceberg4rust` against itself, over all
+three packages. A tool that enforces a bound it does not respect is not worth
+installing. It is the one gate that is this repository's own,
+`xtask/src/gates/self_gate.rs`, and it runs `cargo run --quiet --bin
+cargo-iceberg4rust` -- the binary built from this checkout, not an installed
+release, so a change to the analysis is measured by itself in the same run.
+Exit code 2, offenders found, fails it as above the ceiling; any other non-zero
+code as unable to run.
+
+The self-gate ceiling, `--threshold 9.5`, is a ratchet set just above the
+current worst file, not at the shipped default — a default-sized bound would
+never fire on a crate this small. Lower it when the score improves; never raise
+it to turn a red build green.
+
 cargo-deny runs **last**, and is the one gate that can turn red with nothing
 changed: its advisories come from the RustSec database, so a newly published
 one fails an untouched checkout, and it fetches that database over the network.
@@ -187,7 +204,7 @@ A missing install surfaces only once stage 2 runs, as
 The gates are a `justfile` plus an `xtask` workspace member, not scripts: one
 entry point that behaves the same on Linux, Windows and macOS, and gate
 orchestration in Rust rather than shell text-parsing. `.github/workflows/ci.yml`
-runs both stages on all three on every push and pull request.
+runs both stages on all three for every pull request and every push to `main`.
 
 The gates come from serge4rust, the house's gates as a library, from crates.io
 as `serge4rust = "0.3.2"`: the gates, the stage that runs them, the command
@@ -266,14 +283,6 @@ setting nobody chose is worth having visible in review.
 
 Editing the ruleset in the web UI puts the file out of date, with nothing to
 catch the drift. Change the file and apply it.
-
-The last gate runs `iceberg4rust` against itself. A tool that enforces a bound
-it does not respect is not worth installing.
-
-The self-gate ceiling is a ratchet set just above the current worst file, not at
-the shipped default — a default-sized bound would never fire on a crate this
-small. Lower it when the score improves; never raise it to turn a red build
-green.
 
 ## Technology-free core
 
