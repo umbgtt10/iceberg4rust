@@ -34,3 +34,8 @@ unsafe_code = "forbid"
 [workspace.metadata.cargo-shear]
 ignored = ["proc-macro2"]
 reasons = { proc-macro2 = "declared for its span-locations feature: core reads line numbers from syn's spans, which only that feature gives them; no file imports it" }
+
+# The gates ripe4rust's plan holds the workspace to: both stages, as every
+# change is held to them.
+[workspace.metadata.ripe4rust]
+gates = ["just stage1", "just stage2"]

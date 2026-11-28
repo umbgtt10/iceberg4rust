@@ -218,6 +218,16 @@ where a clone asks it to: `just hooks`, once a clone, on each machine.
 `cargo install cargo-grip4rust`
 `cargo install cargo-braintax4rust`
 
+### Upgrades are planned by ripe4rust
+
+`[workspace.metadata.ripe4rust]` in the root `Cargo.toml` names the gates an
+upgrade is held to: `just stage1` and `just stage2`, as every change is.
+`just ripe` runs `cargo ripe4rust plan`, which says which upgrades -- of a
+dependency or of the toolchain -- are ripe and which need asking about. The
+plan is information: it applies nothing.
+
+`cargo install cargo-ripe4rust`
+
 ### Branch protection
 
 `main` requires a pull request with all six CI jobs green; repository admins
