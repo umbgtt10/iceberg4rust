@@ -88,7 +88,7 @@ development. It needs the network. A requirement in a manifest never moves, so a
 published crate's users can still resolve what they could; what it moves is
 committed on its own. Breaking versions are a separate decision, not taken here.
 
-The technology-free gate runs **first**. It is the xtask's own -- no tool to
+The technology-free gate runs **first**. It is serge4rust's -- no tool to
 install -- and asks three things of `core`: that its manifest names only
 `libm`, `proc-macro2` and `syn`, in any section (read from `cargo metadata
 --no-deps`; a package missing from the metadata fails); that `core/src/lib.rs`
@@ -189,6 +189,15 @@ entry point that behaves the same on Linux, Windows and macOS, and gate
 orchestration in Rust rather than shell text-parsing. `.github/workflows/ci.yml`
 runs both stages on all three on every push and pull request.
 
+The gates come from serge4rust, the house's gates as a library, from crates.io
+as `serge4rust = "0.3.2"`: the gates, the stage that runs them, the command
+runner, the failures, crap4rust's report and the commit scoring. `xtask` keeps
+`main.rs`, which configures them with this repository's constants, and the one
+gate that is this tool's alone -- the self-analysis, `gates/self_gate.rs`, on
+serge4rust's `Gate` and `CommandRunner` -- with its tests. A gate that needs a
+change is changed in serge4rust and released, then taken here by its
+version -- never patched in place.
+
 ### Every commit carries core's scores
 
 The owner's rule of 2026-11-11: every commit message carries the grip and
@@ -208,6 +217,16 @@ where a clone asks it to: `just hooks`, once a clone, on each machine.
 
 `cargo install cargo-grip4rust`
 `cargo install cargo-braintax4rust`
+
+### Upgrades are planned by ripe4rust
+
+`[workspace.metadata.ripe4rust]` in the root `Cargo.toml` names the gates an
+upgrade is held to: `just stage1` and `just stage2`, as every change is.
+`just ripe` runs `cargo ripe4rust plan`, which says which upgrades -- of a
+dependency or of the toolchain -- are ripe and which need asking about. The
+plan is information: it applies nothing.
+
+`cargo install cargo-ripe4rust`
 
 ### Branch protection
 

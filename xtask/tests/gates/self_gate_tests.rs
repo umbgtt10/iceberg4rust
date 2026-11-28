@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use crate::gates::support::fake_command_runner::FakeCommandRunner;
-use xtask::gates::gate::Gate;
+use serge4rust::gates::gate::Gate;
 use xtask::gates::self_gate::SelfGate;
 
 fn gate(runner: &FakeCommandRunner) -> SelfGate<'_> {

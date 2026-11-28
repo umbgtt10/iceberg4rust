@@ -44,3 +44,7 @@ stage1: sync
 # House rules, duplication, CRAP, mirrored tests and the self-analysis gate, run in that order.
 stage2:
     cargo xtask stage2
+
+# The upgrades ripe4rust plans, held to the gates Cargo.toml names for it: information, nothing applied.
+ripe:
+    cargo ripe4rust plan
