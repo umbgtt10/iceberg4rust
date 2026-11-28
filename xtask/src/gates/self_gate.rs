@@ -2,9 +2,9 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use crate::gates::gate::Gate;
-use crate::gates::gate_failure::GateFailure;
-use crate::process::command_runner::CommandRunner;
+use serge4rust::gates::gate::Gate;
+use serge4rust::gates::gate_failure::GateFailure;
+use serge4rust::process::command_runner::CommandRunner;
 
 const OFFENDERS_FOUND: i32 = 2;
 
@@ -63,11 +63,12 @@ impl Gate for SelfGate<'_> {
         // failure to run at all.
         match self.runner.run_streaming("cargo", &args)? {
             Some(0) => Ok(()),
-            Some(OFFENDERS_FOUND) => Err(GateFailure::Found(format!(
-                "a file is at or above the ceiling of {}",
-                self.threshold
-            ))),
-            code => Err(GateFailure::Exited(code)),
+            Some(OFFENDERS_FOUND) => Err(GateFailure::AboveCeiling {
+                ceiling: self.threshold.clone(),
+            }),
+            code => Err(GateFailure::Own {
+                reason: format!("exit code {code:?}"),
+            }),
         }
     }
 }
