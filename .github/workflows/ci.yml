@@ -36,11 +36,12 @@ jobs:
       - name: Install just
         uses: extractions/setup-just@v4
 
-      # Not cached: these are house tools with no prebuilt binaries, and
+      # Not cached: the four house tools have no prebuilt binaries, and
       # caching cargo-installed binaries means `cargo install` silently
       # skips reinstalling even when a newer version is published. Always
       # installing fresh keeps CI honest about which version it gates on,
-      # at the cost of compiling five small crates from source each run.
+      # at the cost of compiling seven crates from source each run.
+      # cargo-shear and cargo-deny are installed at a pinned release.
       # cargo-llvm-cov is crap4rust's own coverage backend, not a house
       # tool, but it has the same "not on a fresh runner" problem.
       - name: Install house gate tools

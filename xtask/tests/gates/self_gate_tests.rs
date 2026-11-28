@@ -78,7 +78,10 @@ fn run_with_exit_code_one_reports_the_exit_code() {
     let result = gate(&runner).run();
 
     // Assert
-    assert!(result.is_err_and(|error| error.to_string().contains("exit code")));
+    assert_eq!(
+        result.map_err(|failure| failure.to_string()),
+        Err(String::from("could not run, exit code 1"))
+    );
 }
 
 // 2 is iceberg4rust's own "offenders found", which the gate must report as a
@@ -95,5 +98,20 @@ fn run_with_exit_code_two_names_the_ceiling_it_breached() {
     assert_eq!(
         result.map_err(|failure| failure.to_string()),
         Err(String::from("a file is at or above the ceiling of 9.5"))
+    );
+}
+
+#[test]
+fn run_with_no_exit_code_reports_a_signal_ended_it() {
+    // Arrange
+    let runner = FakeCommandRunner::new().with_streaming_code(None);
+
+    // Act
+    let result = gate(&runner).run();
+
+    // Assert
+    assert_eq!(
+        result.map_err(|failure| failure.to_string()),
+        Err(String::from("could not run, terminated by signal"))
     );
 }

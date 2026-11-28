@@ -19,8 +19,8 @@ libm = "0.2.16"
 proc-macro2 = { version = "1.0", features = ["span-locations"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serge4rust = "0.3.2"
-syn = { version = "2.0.117", features = ["full", "visit"] }
+serge4rust = "0.3.3"
+syn = { version = "3.0.10", features = ["full", "visit"] }
 tempfile = "3"
 walkdir = "2.5.0"
 
@@ -36,6 +36,11 @@ ignored = ["proc-macro2"]
 reasons = { proc-macro2 = "declared for its span-locations feature: core reads line numbers from syn's spans, which only that feature gives them; no file imports it" }
 
 # The gates ripe4rust's plan holds the workspace to: both stages, as every
-# change is held to them.
+# change is held to them. And the library others depend on, whose public API a
+# breaking upgrade can break (rule 8): its API names syn's types.
+# `cargo-iceberg4rust` is on crates.io too, but it is installed as a
+# subcommand: its library is there for its own tests, and no one builds against
+# it.
 [workspace.metadata.ripe4rust]
 gates = ["just stage1", "just stage2"]
+published = ["iceberg4rust-core"]

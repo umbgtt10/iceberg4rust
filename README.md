@@ -105,22 +105,22 @@ cargo-iceberg4rust report
 
 package            file                                          loc    private_fns  private_complexity  data_structs  behavioral_structs        risk
 -----------------  ------------------------------------------  -----  -------------  ------------------  ------------  ------------------  ----------
-iceberg4rust-core  src/analysis/private_helper_classifier.rs      97              7                  14             0                   0        9.26
+iceberg4rust-core  src/analysis/private_helper_classifier.rs      99              7                  14             0                   0        9.30
 iceberg4rust-core  src/analysis/private_function_collector.rs     92              8                  10             0                   0        8.50
 
 Offender detail:
 
-  iceberg4rust-core  src/analysis/private_helper_classifier.rs  (risk 9.26, 7 private fns, complexity 14)
+  iceberg4rust-core  src/analysis/private_helper_classifier.rs  (risk 9.30, 7 private fns, complexity 14)
       line  complexity  function
         33           3  collect_structs
-        88           3  try_upgrade_impl
-       109           3  upgrade_impls
+        90           3  try_upgrade_impl
+       111           3  upgrade_impls
         59           2  recurse_collect_structs
         69           2  recurse_upgrade_impls
         79           1  try_insert_data_struct
         47           0  impl_target_name
 
-summary: scored_files=15 visible_files=2 threshold=8.00 top=2 total_risk=39.98
+summary: scored_files=14 visible_files=2 threshold=8.00 top=2 total_risk=38.56
 ```
 
 (`iceberg4rust`'s own analysis crate, analysed by itself at `--threshold 8`,
@@ -193,14 +193,20 @@ just stage2
 ```
 
 Stage 1 is formatting, clippy and tests — cargo built-ins only, so it works on
-a fresh checkout. Stage 2 runs `cargo xtask stage2`, which runs, in this
-order: the technology-free core gate (core's manifest, crate-root attributes
-and the std it may not reach), `cargo stern4rust` (house coding rules, all of
-them), `cargo shear` (every declared dependency used), `cargo dry4rust`
-(no duplicated code in `core/src` and `cli/src` beyond `dry4rust-baseline.json`),
-`cargo crap4rust` (complexity vs. coverage), `cargo twin4rust` (every source
-file has a mirrored test file), and `cargo-iceberg4rust` against itself — a
-tool that enforces a bound it does not respect is not worth installing.
+a fresh checkout — after `cargo update` has moved the lock file to the newest
+compatible version of every dependency. Stage 2 runs `cargo xtask stage2`,
+which runs, in this order: the technology-free core gate (core's manifest,
+crate-root attributes and the std it may not reach), `cargo stern4rust` (house
+coding rules, all of them), `cargo shear` (every declared dependency used),
+`cargo dry4rust` (no duplicated code in `core/src` and `cli/src` beyond
+`dry4rust-baseline.json`), `cargo crap4rust` (complexity vs. coverage),
+`cargo twin4rust` (every source file has a mirrored test file),
+`cargo-iceberg4rust` against itself — a tool that enforces a bound it does not
+respect is not worth installing — and `cargo deny` (advisories, licences and
+sources against `deny.toml`), last because its advisory database changes
+without the code changing. The gates come from
+[`serge4rust`](https://crates.io/crates/serge4rust), the house's gates as a
+library; `xtask` configures them and keeps the self-analysis.
 
 Required tools, none of which come with `cargo` itself:
 
@@ -212,6 +218,7 @@ Required tools, none of which come with `cargo` itself:
 | `cargo-crap4rust` | `cargo install cargo-crap4rust` |
 | `cargo-twin4rust` | `cargo install cargo-twin4rust` |
 | [`cargo-shear`](https://github.com/Boshen/cargo-shear) | `cargo install --locked cargo-shear --version 1.14.0` |
+| [`cargo-deny`](https://github.com/EmbarkStudios/cargo-deny) | `cargo install --locked cargo-deny --version 0.20.2` |
 | [`cargo-llvm-cov`](https://github.com/taiki-e/cargo-llvm-cov) | `cargo install cargo-llvm-cov` |
 | `llvm-tools` rustup component | `rustup component add llvm-tools` |
 

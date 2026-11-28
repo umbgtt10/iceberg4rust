@@ -5,6 +5,8 @@ are not listed; this is a record of the tool as it stands, not of intentions.
 
 ## Shipped
 
+Every release since 0.1.0 is in the [CHANGELOG](../CHANGELOG.md).
+
 ### 0.1.0 — first standalone release
 
 - File-level scoring: `FileRisk = (log2(1 + L) / 10) * (P + 0.5·sum(C_i) + 0.5·D + 2.0·B)`
@@ -22,9 +24,9 @@ are not listed; this is a record of the tool as it stands, not of intentions.
 
 ### Detect unit structs used by bare name
 
-The one correctness gap currently recorded in
-[OPEN_POINTS.md](OPEN_POINTS.md). Under-reporting is the wrong direction for a
-gate, so this ranks above anything additive.
+One of the correctness gaps recorded in [OPEN_POINTS.md](OPEN_POINTS.md).
+Under-reporting is the wrong direction for a gate, so this ranks above anything
+additive.
 
 ### Per-package summaries
 

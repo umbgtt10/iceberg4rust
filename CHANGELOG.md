@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+- `iceberg4rust-core` depends on syn 3, 3.0.10, where it depended on syn 2.
+  The analysis is unchanged: no line of the code changed to take it, and the
+  command's text and `--json` reports and exit codes, at the default threshold
+  and at `--threshold 0`, are byte-identical on syn 2 and syn 3 over four
+  workspaces -- this repository's own and three others of the same family. The
+  library's API names syn's types, so a dependent moves with it:
+  `ParseFailure::cause` is a `syn::Error`, and `ComplexityScorer::score`,
+  `PrivateFunctionCollector::collect`, `PrivateHelperClassifier::new`,
+  `StructUsageCollector::collect_used_private_structs` and
+  `TestAttrChecker::has_test_attrs` take syn 3's syntax tree. The workspace's
+  dependency tree drops its second copy of syn.
+- The gates come from serge4rust 0.3.3, the house's gates as a library, from
+  crates.io: every gate, the stage that runs them, the command runner, their
+  failures, crap4rust's report and the commit scoring. `xtask` keeps `main.rs`,
+  which configures them with this repository's constants, and the one gate
+  that is this tool's alone, the self-analysis, with its tests. Stage 2 runs
+  the same eight gates in the same order with the same verdicts; a failing
+  gate says so in serge4rust's words, and says how a run that could not run
+  ended plainly: the self-analysis says `could not run, exit code 1` where it
+  said `exit code Some(1)`, and `could not run, terminated by signal` where it
+  said `exit code None`. No published crate changes.
+
+### Added
+- `[workspace.metadata.ripe4rust]` names both stages as the gates an upgrade
+  is held to, and `just ripe` prints ripe4rust's plan of which upgrades are
+  ripe: information, nothing applied. Its `published` names
+  `iceberg4rust-core`, so a breaking upgrade of a crate in that library's
+  public API is asked about as a breaking change of its own.
+
 ## [0.5.0] - 2026-11-25
 
 Scores move. A gate that passes on 0.4.0 may fail on 0.5.0 without the code

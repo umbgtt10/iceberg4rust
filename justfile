@@ -41,7 +41,8 @@ stage1: sync
     cargo clippy --workspace --all-targets -- -D warnings
     cargo test --workspace
 
-# House rules, duplication, CRAP, mirrored tests and the self-analysis gate, run in that order.
+# The technology-free core, house rules, unused dependencies, duplication, CRAP,
+# mirrored tests, the self-analysis and cargo-deny's dependency checks, run in that order.
 stage2:
     cargo xtask stage2
 

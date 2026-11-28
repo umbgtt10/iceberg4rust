@@ -93,7 +93,7 @@ impl Analyzer {
         behavioral_private_struct_count: usize,
     ) -> f64 {
         // No early return for `private_function_count == 0`. The zero baseline
-        // falls out of the formula when every term is zero, as SPEC.md states,
+        // falls out of the formula when every term is zero, as FORMULA.md states,
         // and short-circuiting on P alone would discard the complexity of a
         // trait impl — which no longer counts toward P but is still burden.
         let size_factor = log2((effective_loc + 1) as f64) / 10.0;

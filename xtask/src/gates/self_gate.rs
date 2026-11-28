@@ -59,16 +59,14 @@ impl Gate for SelfGate<'_> {
         args.push(String::from("--threshold"));
         args.push(self.threshold.clone());
 
-        // 2 is the tool's own "offenders found"; anything else non-zero is a
-        // failure to run at all.
+        // 2 is the tool's own "offenders found"; anything else non-zero, or a
+        // signal, is a failure to run at all.
         match self.runner.run_streaming("cargo", &args)? {
             Some(0) => Ok(()),
             Some(OFFENDERS_FOUND) => Err(GateFailure::AboveCeiling {
                 ceiling: self.threshold.clone(),
             }),
-            code => Err(GateFailure::Own {
-                reason: format!("exit code {code:?}"),
-            }),
+            code => Err(GateFailure::CouldNotRun { exit_code: code }),
         }
     }
 }
