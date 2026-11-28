@@ -193,8 +193,7 @@ just stage2
 ```
 
 Stage 1 is formatting, clippy and tests — cargo built-ins only, so it works on
-a fresh checkout — after `cargo update` has moved the lock file to the newest
-compatible version of every dependency. Stage 2 runs `cargo xtask stage2`,
+a fresh checkout. Stage 2 runs `cargo xtask stage2`,
 which runs, in this order: the technology-free core gate (core's manifest,
 crate-root attributes and the std it may not reach), `cargo stern4rust` (house
 coding rules, all of them), `cargo shear` (every declared dependency used),

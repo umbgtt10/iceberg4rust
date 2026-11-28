@@ -82,11 +82,9 @@ gates in this order:
 | `cargo run --bin cargo-iceberg4rust` | is any file's private implementation risk too high, in this tool's own three packages |
 | `cargo deny` | do the dependencies carry an advisory, a refused licence or a foreign source |
 
-`just stage1` starts with `just sync`: `cargo update`, every dependency to its
-newest compatible version, in the lock file only, while the tools are in
-development. It needs the network. A requirement in a manifest never moves, so a
-published crate's users can still resolve what they could; what it moves is
-committed on its own. Breaking versions are a separate decision, not taken here.
+Stage 1 does not move the lock file. `just ripe` plans each compatible move,
+and the round applies it under both stages: a `cargo update` inside them would
+move more than the upgrade they are checking.
 
 The technology-free gate runs **first**. It is serge4rust's -- no tool to
 install -- and asks three things of `core`: that its manifest names only
